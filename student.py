@@ -48,9 +48,18 @@ class Client:
 
             while True:
                 try:
-                    state = json.loads(
+                    update = json.loads(
                         await websocket.recv()
-                    )  # receive game state, this must be called timely or your game will get out of sync with the server
+                    )  # receive game update, this must be called timely or your game will get out of sync with the server
+
+                    if "map" in update:
+                        # we got a new level
+                        game_properties = update
+                        mapa = Map(update["map"])
+                    else:
+                        # we got a current map state update
+                        state = update
+
 
                     curr_x, curr_y = mapa.keeper
                     move = random.randrange(-1, 2, 2)
