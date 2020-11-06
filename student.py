@@ -9,7 +9,7 @@ from consts import Tiles, TILES
 
 import websockets
 from agent import *
-from mymap import Mymap
+from mymap import *
 
 
 class Client:
@@ -38,10 +38,10 @@ class Client:
 
             # You can create your own map representation or use the game representation:
             print("----- MAP INFO -----")
-            sT = SockobanTree(Mymap(game_properties["map"]))
+            sT = SockobanTree(Map(game_properties["map"])._map)
             # Retrieve map info
             print("----- ELEMENTS IN MAP -----")
-            total_map_elems=sT.mapa._map # lista com todos os elementos no mapa dado
+            total_map_elems=sT.mapa # lista com todos os elementos no mapa dado
             for elem in total_map_elems:
                 print(elem) # vai mostrar quais TITLES tem boxes, paredes, keeper, (...)
             while True:
@@ -53,14 +53,14 @@ class Client:
                     if "map" in update:
                         # we got a new level
                         game_properties = update
-                        sT.update_level(Mymap(update["map"]))
+                        sT.update_level(Map(update["map"])._map)
                     else:
                         # we got a current map state update
                         state = update
 
 
                         pprint.pprint(state)
-                        print(Mymap(f"levels/{state['level']}.xsb"))
+                        print(Map(f"levels/{state['level']}.xsb"))
                         await websocket.send(
                             json.dumps({"cmd": "key", "key": sT.next_move()})
                         )  # send key command to server - you must implement this send in the AI agent

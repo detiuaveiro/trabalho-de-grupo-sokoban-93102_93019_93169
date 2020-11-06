@@ -1,5 +1,6 @@
 from consts import Tiles, TILES
-from mymap import Mymap
+from mymap import *
+from copy import deepcopy
 class Node:
     def __init__(self,mapa,parent,move):
         self.mapa = mapa #mapa actual state
@@ -8,14 +9,17 @@ class Node:
 
 class SockobanTree:
     def __init__ (self, mapa):
-        self.mapa= mapa
-        root = Node(self.mapa,None,None)
+        self.mapa = mapa # list with map elements
+        root = Node(self.mapa, None, None)
         self.open_nodes = [root]
         self.path_solution= None
+        
+        self.used_nodes = []
+
         self.search()
     
-    def update_level (self,mapa):
-        self.mapa=mapa
+    def update_level (self, mapa):
+        self.mapa = mapa
         self.search()
         
     def get_move_path(self,node):
@@ -26,10 +30,11 @@ class SockobanTree:
         return path
 
     def get_path(self,node):
+        print("Get Path: ", node.mapa)
         if node.parent == None:
-            return [node.mapa.__getstate__()]
+            return [node.mapa]
         path = self.get_path(node.parent)
-        path += [node.mapa.__getstate__()]
+        path += [node.mapa]
         return path
 
     def next_move(self):
@@ -38,32 +43,30 @@ class SockobanTree:
             nxt=self.path_solution[0]
             self.path_solution=self.path_solution[1:]
             return nxt
-    
-    
 
     def search(self):
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
-            if node.mapa.completed:
+            self.used_nodes.append(node.mapa)
+
+            if completed(node.mapa):
                 print("!!!!!!!!!!!!!!!!")
-                self.path_solution = self.get_move_path(node)
+                self.path_solution = self.get_move_path(deepcopy(node))
+                print(self.path_solution)
                 return
             lnewnodes = []
             # for each possible action in the set of actions for that state
-            print(node.mapa.possible_actions())
-
-            for move,key in node.mapa.possible_actions():
-
-                newnode = Node(Mymap(node.mapa.__getlevel__()),node,key)
-                newnode.mapa.move(node.mapa.keeper, key)
-
-                
-
-                print(newnode.mapa)
-                print("\n")
-                if newnode.mapa.__getstate__() not in self.get_path(node):
-                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& IF")
+            #print("[SEARCH] Possible Actions:", possible_actions(node.mapa))
+    
+            for m,key in possible_actions(node.mapa):
+                keeper = filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL], node.mapa)[0]
+                newnode = Node(move(keeper, key, deepcopy(node.mapa)), node, key)
+                if newnode.mapa not in self.used_nodes:
                     lnewnodes.append(newnode) 
+                
+                """if newnode.mapa not in self.get_path(node):
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& IF")
+                    lnewnodes.append(newnode)""" 
 
             self.add_to_open(lnewnodes)
         return None
