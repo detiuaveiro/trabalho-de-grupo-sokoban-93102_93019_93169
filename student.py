@@ -8,6 +8,7 @@ from consts import Tiles, TILES
 
 
 import websockets
+from agent import *
 from mapa import Map
 
 
@@ -37,15 +38,12 @@ class Client:
 
             # You can create your own map representation or use the game representation:
             print("----- MAP INFO -----")
-            mapa = Map(game_properties["map"])
-            print(mapa)
+            sT = SockobanTree(Map(game_properties["map"]))
             # Retrieve map info
             print("----- ELEMENTS IN MAP -----")
-            total_map_elems = mapa._map # lista com todos os elementos no mapa dado
+            total_map_elems=sT.map._map # lista com todos os elementos no mapa dado
             for elem in total_map_elems:
                 print(elem) # vai mostrar quais TITLES tem boxes, paredes, keeper, (...)
-
-
             while True:
                 try:
                     update = json.loads(
@@ -55,40 +53,16 @@ class Client:
                     if "map" in update:
                         # we got a new level
                         game_properties = update
-                        mapa = Map(update["map"])
+                        sT.update_level(Map(update["map"]))
                     else:
                         # we got a current map state update
                         state = update
 
 
-                    curr_x, curr_y = mapa.keeper
-                    move = random.randrange(-1, 2, 2)
-                    coord_pick = random.randrange(0, 2)  # 0 -> x || 1 -> y
-
-                    if coord_pick == 0:
-                        next_x = curr_x + move
-                        next_y = curr_y
-                    else:
-                        next_y = curr_y + move
-                        next_x = curr_x
-
-                    if mapa.is_blocked((next_x, next_y)):
-                        print("Invalid Move!!")
-                        continue
-                    else:
-                        if move == 1 and coord_pick == 0:
-                            key = "d"
-                        elif move == 1 and coord_pick == 1:
-                            key = "w"
-                        elif move == -1 and coord_pick == 1:
-                            key = "s"
-                        else:
-                            key = "a"
-
                         pprint.pprint(state)
                         print(Map(f"levels/{state['level']}.xsb"))
                         await websocket.send(
-                            json.dumps({"cmd": "key", "key": key})
+                            json.dumps({"cmd": "key", "key": sT.next_move()})
                         )  # send key command to server - you must implement this send in the AI agent
 
                 except websockets.exceptions.ConnectionClosedOK:
