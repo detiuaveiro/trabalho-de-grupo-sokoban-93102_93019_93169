@@ -33,31 +33,38 @@ class SockobanTree:
         return path
 
     def next_move(self):
-        print("PATH_SOLUTION " + str(self.path_solution))
-        nxt=self.path_solution[0]
-        self.path_solution=self.path_solution[1:]
-        return nxt
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& SOLUTION: " + str(self.path_solution))
+        if self.path_solution is not None:
+            nxt=self.path_solution[0]
+            self.path_solution=self.path_solution[1:]
+            return nxt
+    
+    
 
     def search(self):
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
             if node.mapa.completed:
+                print("!!!!!!!!!!!!!!!!")
                 self.path_solution = self.get_move_path(node)
                 return
             lnewnodes = []
             # for each possible action in the set of actions for that state
-            for move,key in self.mapa.possible_actions():
+            print(node.mapa.possible_actions())
+
+            for move,key in node.mapa.possible_actions():
+
                 newnode = Node(Mymap(node.mapa.__getlevel__()),node,key)
-                newnode.mapa.__setstate__(node.mapa.__getstate__())
-                print("STATE"+  str(newnode.mapa.__getstate__()))
-                newnode.mapa.set_tile(move,Tiles.MAN)
-                print("SToTE"+  str(newnode.mapa.__getstate__()))
-                newnode.mapa.clear_tile(node.mapa.keeper)
-                #print("NODE PATH" + str(self.get_path(node)))
-                print("STiTE" + str(newnode.mapa.__getstate__()))
+                newnode.mapa.move(node.mapa.keeper, key)
+
+                
+
+                print(newnode.mapa)
+                print("\n")
                 if newnode.mapa.__getstate__() not in self.get_path(node):
-                    print("entrei")
-                    lnewnodes.append(newnode)        
+                    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& IF")
+                    lnewnodes.append(newnode) 
+
             self.add_to_open(lnewnodes)
         return None
     

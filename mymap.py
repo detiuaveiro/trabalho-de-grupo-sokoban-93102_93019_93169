@@ -2,6 +2,8 @@ from mapa import Map
 from consts import Tiles, TILES
 
 class Mymap(Map):
+    def __init__(self, filename):
+        Map.__init__(self, filename)
 
     # Non possible actions
     """
@@ -86,6 +88,36 @@ class Mymap(Map):
             cby+=1
         return cbx,cby,cwx,cwy
 
+    def move(self, cur, direction):
+            cx, cy = cur
+            ctile = self.get_tile(cur)
+
+            npos = cur
+            if direction == "w":
+                npos = cx, cy - 1
+            if direction == "a":
+                npos = cx - 1, cy
+            if direction == "s":
+                npos = cx, cy + 1
+            if direction == "d":
+                npos = cx + 1, cy
+
+           
+            if self.get_tile(npos) in [
+                Tiles.BOX,
+                Tiles.BOX_ON_GOAL,
+            ]:  # next position has a box?
+                if ctile & Tiles.MAN == Tiles.MAN:  # if you are the keeper you can push
+                    if not self.move(npos, direction):  # as long as the pushed box can move
+                        return False
+                else:  # you are not the Keeper, so no pushing
+                    return False
+
+            # actually update map
+            self.set_tile(npos, ctile)
+            self.clear_tile(cur)
+            return True
+            
     def __getlevel__(self):
         return self._level
     
