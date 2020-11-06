@@ -51,7 +51,7 @@ class SockobanTree:
 
             if completed(node.mapa):
                 print("!!!!!!!!!!!!!!!!")
-                self.path_solution = self.get_move_path(deepcopy(node))
+                self.path_solution = self.get_move_path(node)
                 print(self.path_solution)
                 return
             lnewnodes = []
@@ -61,7 +61,9 @@ class SockobanTree:
             for m,key in possible_actions(node.mapa):
                 keeper = filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL], node.mapa)[0]
                 newnode = Node(move(keeper, key, deepcopy(node.mapa)), node, key)
+                print(s(newnode.mapa))
                 if newnode.mapa not in self.used_nodes:
+                    print("Node appended")
                     lnewnodes.append(newnode) 
                 
                 """if newnode.mapa not in self.get_path(node):
@@ -72,5 +74,5 @@ class SockobanTree:
         return None
     
     def add_to_open(self,lnewnodes):
-        self.open_nodes.extend(lnewnodes)
+        self.open_nodes[:0]=lnewnodes
         
