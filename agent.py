@@ -20,6 +20,8 @@ class SockobanTree:
     
     def update_level (self, mapa):
         self.mapa = mapa
+        root = Node(self.mapa, None, None)
+        self.open_nodes = [root]
         self.search()
         
     def get_move_path(self,node):
