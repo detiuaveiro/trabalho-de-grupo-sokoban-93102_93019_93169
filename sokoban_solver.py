@@ -6,7 +6,7 @@ class Node:
         self.boxes = boxes # mapa actual state
         self.parent = parent
         self.move = move
-        self.keeper = keeper
+        self.keeper = keeper # Position
 
 class SokobanTree:
     def __init__ (self, map_state, init_boxes, goal_boxes):
@@ -15,7 +15,7 @@ class SokobanTree:
         self.init_boxes = init_boxes
         self.goal_boxes = goal_boxes # [(x,y), (z,w)...]
         self.Util = Util(self.map_state, self.init_boxes)
-        self.root = Node(self.init_boxes, None, None, self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL]) )
+        self.root = Node(self.init_boxes, None, None, self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL])[0] )
         self.open_nodes = [self.root]
         self.path_solution= None
         
@@ -31,7 +31,7 @@ class SokobanTree:
         self.init_boxes = new_init_boxes
         self.Util = Util(self.map_state, self.init_boxes)
         self.goal_boxes = new_goal_boxes
-        self.root = Node(self.init_boxes, None, None)
+        self.root = Node(self.init_boxes, None, None, self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL])[0])
         self.open_nodes = [self.root]
         self.search()
         
@@ -60,7 +60,7 @@ class SokobanTree:
             node = self.open_nodes.pop(0)
             self.used_nodes.append(node.boxes)
 
-            if Util.completed(node.boxes, self.goal_boxes):
+            if self.Util.completed(node.boxes, self.goal_boxes):
                 self.path_solution = self.get_move_path(node)
                 return
 
@@ -73,7 +73,7 @@ class SokobanTree:
                     newnode = Node(node.boxes, node, action,)
 
 
-                keeper = filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL], node.boxes)[0]
+                keeper = self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL], node.boxes)[0]
                 newnode = Node(move(keeper, key, deepcopy(node.boxes)), node, key)
 
                 if newnode.boxes not in self.used_nodes:
