@@ -14,10 +14,9 @@ TIMEOUT = 3000
 GAME_SPEED = 10
 
 
-def reduce_score(score):
+def reduce_score(puzzles, moves, pushes, steps, box_on_goal):
     """Convert tuple into 1-dimension score."""
-    puzzles, moves, pushes, steps = score
-    return 10000 * puzzles - 100 * pushes - steps
+    return 10000 * puzzles + 1000 * box_on_goal - 100 * pushes - steps
 
 
 class Game:
@@ -65,7 +64,7 @@ class Game:
     @property
     def score(self):
         """Calculus of the current score."""
-        return self.puzzles, self._moves, self._pushes, self._total_steps + self._step
+        return self.puzzles, self._moves, self._pushes, self._total_steps + self._step, self.map.on_goal
 
     def stop(self):
         """Stop the game."""
@@ -79,6 +78,7 @@ class Game:
         self._total_steps += self._step
         self._step = 0
         self._lastkeypress = ""
+        self._papertrail += "," 
         self.level = level
         try:
             self.map = Map(f"levels/{level}.xsb")
