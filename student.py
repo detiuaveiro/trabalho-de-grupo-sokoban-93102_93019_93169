@@ -6,8 +6,12 @@ import random
 
 import websockets
 from mapa import Map
+from sokoban_solver import SokobanTree
+from consts import *
 
 # ####Importar a search
+
+SokobanTree = SokobanTree ()
 
 async def solver(puzzle, solution):
     while True:
@@ -15,11 +19,10 @@ async def solver(puzzle, solution):
         mapa = Map(game_properties["map"])
         print(mapa)
 
-        while True:
-            await asyncio.sleep(0.1)  # this should be 0 in your code and this is REQUIRED
-            break
+        SokobanTree.update_level(mapa._map, mapa.filter_tiles([Tiles.BOX, Tiles.BOX_ON_GOAL]), mapa.filter_tiles([Tiles.GOAL, Tiles.BOX_ON_GOAL, Tiles.MAN_ON_GOAL]))
 
-        keys = "sawdddsawaassdwawdwwasdssddwasaww"
+        keys = await SokobanTree.search()
+        print(keys)
         await solution.put(keys)
 
 async def agent_loop(puzzle, solution, server_address="localhost:8000", agent_name="student"):
@@ -27,7 +30,6 @@ async def agent_loop(puzzle, solution, server_address="localhost:8000", agent_na
 
         # Receive information about static game properties
         await websocket.send(json.dumps({"cmd": "join", "name": agent_name}))
-
         while True:
             try:
                 update = json.loads(
@@ -35,10 +37,14 @@ async def agent_loop(puzzle, solution, server_address="localhost:8000", agent_na
                 )  # receive game update, this must be called timely or your game will get out of sync with the server
 
                 if "map" in update:
+
                     # we got a new level
                     game_properties = update
                     keys = ""
+
                     await puzzle.put(game_properties)
+
+                is_first_level = False
 
                 if not solution.empty():
                     keys = await solution.get()

@@ -2,7 +2,7 @@ from mapa import Map
 from consts import Tiles, TILES
 
 class Util:
-    def __init__ (self, map_state, init_boxes):
+    def __init__ (self, map_state=None, init_boxes=None):
         self.map_state = map_state
         self.curr_boxes = init_boxes
         self.move = None
@@ -13,6 +13,34 @@ class Util:
         """
         return all(box in goal_boxes for box in curr_boxes)
 
+    def possible_keeper_actions(self, keeper_pos):
+        possible_moves = []
+
+        x, y = keeper_pos
+        left = (x - 1, y)
+        right = (x + 1, y)
+        up = (x, y - 1)
+        down = (x, y + 1)
+
+        # Left
+        self.move = "left"
+        if not self.is_blocked(left):
+            possible_moves.append((left, "a"))
+        # Right
+        self.move = "right"
+        if not self.is_blocked(right):
+            possible_moves.append((right, "d"))
+        # Up
+        self.move = "up"
+        if not self.is_blocked(up):
+            possible_moves.append((up, "w"))
+        # Down
+        self.move = "down"
+        if not self.is_blocked(down):
+            possible_moves.append((down, "s"))
+
+        return possible_moves
+
     def possible_actions(self, curr_boxes):
         """
             Possible actions vai ser a lista de ações possiveis de todas as caixas
@@ -21,9 +49,10 @@ class Util:
         self.curr_boxes = curr_boxes
         possible_actions =[]
 
+        i = 0
         for box in curr_boxes:
-            possible_actions.append(self.possible_moves(box))
-        
+            possible_actions.append((i, self.possible_moves(box)))
+            i += 1
         return possible_actions
 
     def possible_moves(self, box):
@@ -52,6 +81,8 @@ class Util:
         if not self.is_dead_end(down):
             possible_moves.append(down)
 
+        return possible_moves
+
     def is_dead_end(self, pos):
         if self.is_blocked(pos) or self.is_trapped(pos):
             return True
@@ -76,7 +107,7 @@ class Util:
         if self.get_tile(pos) == Tiles.GOAL:
             return False
         
-        cbx, cby, cwx, cwy = self.number_possibilities(pos)
+        cbx, cby, cwx, cwy = self.num_possibilities(pos)
 
         # é canto nas paredes
         if cwx+cwy <= 2:
@@ -89,7 +120,7 @@ class Util:
             return True
         
 
-    def num_possibilites(self, pos):
+    def num_possibilities(self, pos):
         """
             Verifica quantas possibilidades uma caixa tem de se mover para todas as direções
         """
@@ -132,7 +163,7 @@ class Util:
 
 
     
-    def get_tile(self, pos):
+    def get_tile(self, pos):      
         """Retrieve tile at position pos."""
         x, y = pos
         return self.map_state[y][x]
@@ -181,33 +212,33 @@ class Util:
     #     return possible_actions
 
         
-    def is_dead_end(new_keeper, move, state_list):
-        """
-            Checks if it's a dead end
-            dead end: the box ends up on a corner
-        """
-        if get_tile(new_keeper, state_list) == Tiles.BOX or get_tile(new_keeper, state_list)== Tiles.BOX_ON_GOAL:
-            if move == "left":
-                new_box = (new_keeper[0]-1, new_keeper[1])
-            elif move == "right":
-                new_box = (new_keeper[0]+1, new_keeper[1])
-            elif move == "down":
-                new_box = (new_keeper[0], new_keeper[1]+1)
-            else:
-                new_box = (new_keeper[0], new_keeper[1]-1)
-            if not get_tile(new_box, state_list) == Tiles.GOAL:
-                cbx, cby, cwx, cwy = number_possibilities(new_box, state_list,move)
-                print("NP:"+ str(cbx)+str(cby)+str(cwx)+str(cwy))
-                # é canto nas paredes
-                if cwx+cwy <= 2:
-                    return True
-                # é "canto" nas caixas
-                if cbx < 2 and cby < 2:
-                    return True
-                # é "canto" com caixas e paredes
-                if (cbx < 2 and cwy < 2) or (cby < 2 and cwx < 2):
-                    return True
-        return False
+    # def is_dead_end(new_keeper, move, state_list):
+    #     """
+    #         Checks if it's a dead end
+    #         dead end: the box ends up on a corner
+    #     """
+    #     if get_tile(new_keeper, state_list) == Tiles.BOX or get_tile(new_keeper, state_list)== Tiles.BOX_ON_GOAL:
+    #         if move == "left":
+    #             new_box = (new_keeper[0]-1, new_keeper[1])
+    #         elif move == "right":
+    #             new_box = (new_keeper[0]+1, new_keeper[1])
+    #         elif move == "down":
+    #             new_box = (new_keeper[0], new_keeper[1]+1)
+    #         else:
+    #             new_box = (new_keeper[0], new_keeper[1]-1)
+    #         if not get_tile(new_box, state_list) == Tiles.GOAL:
+    #             cbx, cby, cwx, cwy = number_possibilities(new_box, state_list,move)
+    #             print("NP:"+ str(cbx)+str(cby)+str(cwx)+str(cwy))
+    #             # é canto nas paredes
+    #             if cwx+cwy <= 2:
+    #                 return True
+    #             # é "canto" nas caixas
+    #             if cbx < 2 and cby < 2:
+    #                 return True
+    #             # é "canto" com caixas e paredes
+    #             if (cbx < 2 and cwy < 2) or (cby < 2 and cwx < 2):
+    #                 return True
+    #     return False
 
 
     # def number_possibilities(new_box, state_list,move):
@@ -243,109 +274,109 @@ class Util:
     #         cby+=1
     #     return cbx,cby,cwx,cwy
 
-    def move(cur, direction, state_list):
-            """
-                If you're the keeper, you can push
-            """
-            cx, cy = cur
-            ctile = get_tile(cur, state_list)
+    # def move(cur, direction, state_list):
+    #         """
+    #             If you're the keeper, you can push
+    #         """
+    #         cx, cy = cur
+    #         ctile = get_tile(cur, state_list)
             
-            npos = cur
-            if direction == "w":
-                npos = cx, cy - 1
-            if direction == "a":
-                npos = cx - 1, cy
-            if direction == "s":
-                npos = cx, cy + 1
-            if direction == "d":
-                npos = cx + 1, cy
+    #         npos = cur
+    #         if direction == "w":
+    #             npos = cx, cy - 1
+    #         if direction == "a":
+    #             npos = cx - 1, cy
+    #         if direction == "s":
+    #             npos = cx, cy + 1
+    #         if direction == "d":
+    #             npos = cx + 1, cy
                 
-            print("NPOS: ", npos)
+    #         print("NPOS: ", npos)
 
-            if get_tile(npos, state_list) == Tiles.BOX or get_tile(npos, state_list) == Tiles.BOX_ON_GOAL:
-                # Updates in that direction
-                if direction == "w":
-                    state_list = update_boxes(state_list, (cx, cy-2))
-                if direction == "a":
-                    state_list = update_boxes(state_list, (cx-2, cy))
-                if direction == "s":
-                    state_list = update_boxes(state_list, (cx, cy+2))
-                if direction == "d":
-                    state_list = update_boxes(state_list, (cx+2, cy))
+    #         if get_tile(npos, state_list) == Tiles.BOX or get_tile(npos, state_list) == Tiles.BOX_ON_GOAL:
+    #             # Updates in that direction
+    #             if direction == "w":
+    #                 state_list = update_boxes(state_list, (cx, cy-2))
+    #             if direction == "a":
+    #                 state_list = update_boxes(state_list, (cx-2, cy))
+    #             if direction == "s":
+    #                 state_list = update_boxes(state_list, (cx, cy+2))
+    #             if direction == "d":
+    #                 state_list = update_boxes(state_list, (cx+2, cy))
 
-            # Updates keeper 
-            if direction == "w":
-                state_list = update_man(state_list, (cx, cy-1))
-            if direction == "a":
-                state_list = update_man(state_list, (cx-1, cy))
-            if direction == "s":
-                state_list = update_man(state_list, (cx, cy+1))
-            if direction == "d":
-                state_list = update_man(state_list, (cx+1, cy))
+    #         # Updates keeper 
+    #         if direction == "w":
+    #             state_list = update_man(state_list, (cx, cy-1))
+    #         if direction == "a":
+    #             state_list = update_man(state_list, (cx-1, cy))
+    #         if direction == "s":
+    #             state_list = update_man(state_list, (cx, cy+1))
+    #         if direction == "d":
+    #             state_list = update_man(state_list, (cx+1, cy))
             
-            # Updates old position
-            if get_tile(cur, state_list) == Tiles.MAN:
-                state_list[cy][cx] = Tiles.FLOOR
-            else:
-                state_list[cy][cx] = Tiles.GOAL
+    #         # Updates old position
+    #         if get_tile(cur, state_list) == Tiles.MAN:
+    #             state_list[cy][cx] = Tiles.FLOOR
+    #         else:
+    #             state_list[cy][cx] = Tiles.GOAL
 
-            return state_list
+    #         return state_list
             
-    def update_boxes(state_list, pos):
-        """
-            Checks if that position was on goal
-        """
-        if get_tile(pos, state_list) == Tiles.GOAL:
-            state_list[pos[1]][pos[0]] = Tiles.BOX_ON_GOAL
-        else:
-            state_list[pos[1]][pos[0]] = Tiles.BOX
-        return state_list
+    # def update_boxes(state_list, pos):
+    #     """
+    #         Checks if that position was on goal
+    #     """
+    #     if get_tile(pos, state_list) == Tiles.GOAL:
+    #         state_list[pos[1]][pos[0]] = Tiles.BOX_ON_GOAL
+    #     else:
+    #         state_list[pos[1]][pos[0]] = Tiles.BOX
+    #     return state_list
 
-    def update_man(state_list, pos):
-        """
-            Checks if that position was on goal
-        """
-        if get_tile(pos, state_list) == Tiles.GOAL or get_tile(pos, state_list) == Tiles.BOX_ON_GOAL:
-            state_list[pos[1]][pos[0]] = Tiles.MAN_ON_GOAL
-        else:
-            state_list[pos[1]][pos[0]] = Tiles.MAN
-        return state_list
+    # def update_man(state_list, pos):
+    #     """
+    #         Checks if that position was on goal
+    #     """
+    #     if get_tile(pos, state_list) == Tiles.GOAL or get_tile(pos, state_list) == Tiles.BOX_ON_GOAL:
+    #         state_list[pos[1]][pos[0]] = Tiles.MAN_ON_GOAL
+    #     else:
+    #         state_list[pos[1]][pos[0]] = Tiles.MAN
+    #     return state_list
 
     
 
-    def is_blocked(pos, state_list,direction=None):
-        """Determine if mobile entity can be placed at pos."""
-        x, y = pos
-        print("IsBlocked? ", pos)
-        if x not in range(0,len(state_list[0])) or y not in range(0,len(state_list)):
-            print("Position out of map")
-            return True
+    # def is_blocked(pos, state_list,direction=None):
+    #     """Determine if mobile entity can be placed at pos."""
+    #     x, y = pos
+    #     print("IsBlocked? ", pos)
+    #     if x not in range(0,len(state_list[0])) or y not in range(0,len(state_list)):
+    #         print("Position out of map")
+    #         return True
         
-        if get_tile(pos, state_list) == Tiles.WALL:
-            print("Position is a wall")
-            return True
-        if direction == "left"  :
-            if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x-1,y), state_list) == Tiles.BOX or get_tile((x-1,y), state_list) == Tiles.BOX_ON_GOAL):
-                return True
-        elif direction == "right"  :
-            if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x+1,y), state_list) == Tiles.BOX or get_tile((x+1,y), state_list) == Tiles.BOX_ON_GOAL):
-                return True
-        elif direction == "up"  :
-            if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x,y-1), state_list) == Tiles.BOX or get_tile((x,y-1), state_list) == Tiles.BOX_ON_GOAL):
-                return True
-        elif direction == "down"  :
-            if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x,y+1), state_list) == Tiles.BOX or get_tile((x,y+1), state_list) == Tiles.BOX_ON_GOAL):
-                return True
-        return False
+    #     if get_tile(pos, state_list) == Tiles.WALL:
+    #         print("Position is a wall")
+    #         return True
+    #     if direction == "left"  :
+    #         if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x-1,y), state_list) == Tiles.BOX or get_tile((x-1,y), state_list) == Tiles.BOX_ON_GOAL):
+    #             return True
+    #     elif direction == "right"  :
+    #         if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x+1,y), state_list) == Tiles.BOX or get_tile((x+1,y), state_list) == Tiles.BOX_ON_GOAL):
+    #             return True
+    #     elif direction == "up"  :
+    #         if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x,y-1), state_list) == Tiles.BOX or get_tile((x,y-1), state_list) == Tiles.BOX_ON_GOAL):
+    #             return True
+    #     elif direction == "down"  :
+    #         if (get_tile((x,y), state_list) == Tiles.BOX or get_tile((x,y), state_list) == Tiles.BOX_ON_GOAL) and (get_tile((x,y+1), state_list) == Tiles.BOX or get_tile((x,y+1), state_list) == Tiles.BOX_ON_GOAL):
+    #             return True
+    #     return False
 
    
 
-    def s(state_list):
-        map_str = ""
-        screen = {tile: symbol for symbol, tile in TILES.items()}
-        for line in state_list:
-            for tile in line:
-                map_str += screen[tile]
-            map_str += "\n"
+    # def s(state_list):
+    #     map_str = ""
+    #     screen = {tile: symbol for symbol, tile in TILES.items()}
+    #     for line in state_list:
+    #         for tile in line:
+    #             map_str += screen[tile]
+    #         map_str += "\n"
 
-        return map_str.strip()
+    #     return map_str.strip()
