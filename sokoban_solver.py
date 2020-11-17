@@ -42,9 +42,6 @@ class SokobanTree:
         return path
 
     async def search(self):
-        print("INIT", self.init_boxes)
-        print("GOAL", self.goal_boxes)
-
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
 
@@ -58,7 +55,6 @@ class SokobanTree:
             lnewnodes = []
     
             for box_num, box in self.Util.possible_actions(node.boxes):
-                print((box_num, box))
                 while True:
                     await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
                     break
@@ -95,7 +91,6 @@ class SokobanTree:
                         newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos)
 
                         if (newnode.boxes, newnode.keeper) not in self.used_states:
-                            print("entrei")
                             lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
         return None
