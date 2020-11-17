@@ -32,7 +32,8 @@ class SokobanTree:
         self.root = Node(self.init_boxes, None, "", self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL])[0])
         self.open_nodes = [self.root]
         self.KeeperTree = KeeperTree(self.Util)
-
+        self.used_states = []
+        
     def get_path(self,node):
         if node.parent == None:
             return [node.boxes]
@@ -57,20 +58,20 @@ class SokobanTree:
             lnewnodes = []
     
             for box_num, box in self.Util.possible_actions(node.boxes):
-         
+                print((box_num, box))
                 while True:
                     await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
                     break
                 
                 for action in box:
-
+                    #print("{} {}".format(box, action))
                     curr_box_pos = node.boxes[box_num]
 
                     x, y = curr_box_pos
                     left = (- 1, 0)
                     right = (1, 0)
                     up = (0, - 1)
-                    down = (0, 1)
+                    down = (0, 1)   
 
                     sub =  (action[0] - curr_box_pos[0], action[1] - curr_box_pos[1])
 
@@ -86,13 +87,15 @@ class SokobanTree:
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
 
                     keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
+
                     if keeper_moves is not None:
                         new_boxes = deepcopy(node.boxes)
                         new_boxes[box_num] = action
                         
                         newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos)
-                        
+
                         if (newnode.boxes, newnode.keeper) not in self.used_states:
+                            print("entrei")
                             lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
         return None
@@ -124,6 +127,7 @@ class KeeperTree:
         self.keeper_nodes = [KeeperNode(None, keeper_pos, "")]
 
         while self.keeper_nodes != []:
+
             node = self.keeper_nodes.pop(0)
 
             if node.keeper_pos == target_pos:
@@ -131,14 +135,15 @@ class KeeperTree:
                 return node.move
 
             lnewnodes = []
-    
+
             for action, key in self.Util.possible_keeper_actions(node.keeper_pos):
                 newnode = KeeperNode(node, action, node.move + key)
+
                 if newnode.keeper_pos not in self.get_path(node):
                     lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
         return None
 
     def add_to_open(self,lnewnodes):
-        self.keeper_nodes.extend(lnewnodes)
+        self.keeper_nodes[:0] = lnewnodes
       

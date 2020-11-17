@@ -56,6 +56,9 @@ class Util:
         return possible_actions
 
     def possible_moves(self, box):
+
+
+        print(">>>> ", box)
         possible_moves = []
 
         x, y = box
@@ -67,18 +70,23 @@ class Util:
         # Left
         self.move = "left"
         if not self.is_dead_end(left):
+            print("left is possible")
             possible_moves.append(left)
         # Right
         self.move = "right"
         if not self.is_dead_end(right):
+            print("right is possible")
+
             possible_moves.append(right)
         # Up
         self.move = "up"
         if not self.is_dead_end(up):
+            print("up is possible")
             possible_moves.append(up)
         # Down
         self.move = "down"
         if not self.is_dead_end(down):
+            print("down is possible")
             possible_moves.append(down)
 
         return possible_moves
@@ -94,6 +102,7 @@ class Util:
             Verifica se a pos não é uma parede, ou outra caixa
         """
         if self.get_tile(pos) == Tiles.WALL: 
+
             return True
         if pos in self.curr_boxes: 
             return True
@@ -104,20 +113,31 @@ class Util:
             Verifica se a pos é um canto
             Mais para a frente -> + Adicionar lateral sem goals
         """
+        print("Not BLocked")
+        
         if self.get_tile(pos) == Tiles.GOAL:
             return False
         
         cbx, cby, cwx, cwy = self.num_possibilities(pos)
 
+        print("{} {} {} {} {}".format(pos, cbx, cby, cwx, cwy))
+
+
         # é canto nas paredes
-        if cwx+cwy <= 2:
+        if cwx+cwy < 2 or (cwx == 1 and cwy == 1):
+            print("c1")
             return True
         # é "canto" nas caixas
         if cbx < 2 and cby < 2:
+            print("c2")
             return True
         # é "canto" com caixas e paredes
         if (cbx < 2 and cwy < 2) or (cby < 2 and cwx < 2):
+            print("c3")
             return True
+        
+        print("Not trapped")
+        return False
         
 
     def num_possibilities(self, pos):
