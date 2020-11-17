@@ -1,12 +1,20 @@
 from mapa import Map
 from consts import Tiles, TILES
+import math
 
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
         self.map_state = map_state
         self.curr_boxes = init_boxes
         self.move = None
-    
+        self.goals = self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL]) if map_state is not None else None
+
+    def heuristic_boxes(self, box):
+        return min(self.heuristic(box, goal) for goal in self.goals)
+
+    def heuristic(self, pos1, pos2):
+        return math.sqrt((pos2[0]-pos1[0])**2 + (pos2[1]-pos1[1])**2)
+
     def completed(self, curr_boxes, goal_boxes):
         """
             Given the goal boxes and the current boxes, checks if they match

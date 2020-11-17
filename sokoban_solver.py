@@ -3,11 +3,12 @@ from copy import deepcopy
 import asyncio
 
 class Node:
-    def __init__(self,boxes,parent,move,keeper):
+    def __init__(self,boxes,parent,move,keeper, heuristic):
         self.boxes = boxes # mapa actual state
         self.parent = parent
         self.move = move
         self.keeper = keeper
+        self.heuristic = heuristic
 
 class SokobanTree:
     def __init__ (self, map_state=None, init_boxes=None, goal_boxes=None):
@@ -29,12 +30,12 @@ class SokobanTree:
         self.init_boxes = new_init_boxes
         self.Util = Util(self.map_state, self.init_boxes)
         self.goal_boxes = new_goal_boxes
-        self.root = Node(self.init_boxes, None, "", self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL])[0])
+        self.root = Node(self.init_boxes, None, "", self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL])[0], 0)
         self.open_nodes = [self.root]
         self.KeeperTree = KeeperTree(self.Util)
         self.used_states = []
         
-    def get_path(self,node):
+    def get_path(self, node):
         if node.parent == None:
             return [node.boxes]
         path = self.get_path(node.parent)
@@ -78,7 +79,7 @@ class SokobanTree:
                     elif sub==up:
                         push = "w"
                     else:
-                        push = "s"
+                        push = "s"  
                     # 2*pos atual da caixa - posição para onde vai
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
 
@@ -88,7 +89,7 @@ class SokobanTree:
                         new_boxes = deepcopy(node.boxes)
                         new_boxes[box_num] = action
                         
-                        newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos)
+                        newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos, node.heuristic + self.Util.heuristic_boxes(action))
 
                         if (newnode.boxes, newnode.keeper) not in self.used_states:
                             lnewnodes.append(newnode)
@@ -97,19 +98,20 @@ class SokobanTree:
 
     def add_to_open(self,lnewnodes):
         self.open_nodes[:0] = lnewnodes
+        self.open_nodes.sort(key=lambda node : node.heuristic)
 
 class KeeperNode:
-    def __init__(self, parent, keeper_pos, move):
+    def __init__(self, parent, keeper_pos, move, heuristic=None):
         self.parent = parent
         self.keeper_pos = keeper_pos
         self.move = move
+        self.heuristic = heuristic
 
 class KeeperTree:
     def __init__(self, Util):
         self.solution = None
         self.Util = Util
         self.keeper_nodes = None
-        
 
     def get_path(self, node):
         if node.parent == None:
@@ -119,7 +121,7 @@ class KeeperTree:
         return path
 
     def search_keeper(self, target_pos, keeper_pos):
-        self.keeper_nodes = [KeeperNode(None, keeper_pos, "")]
+        self.keeper_nodes = [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
 
         while self.keeper_nodes != []:
 
@@ -132,8 +134,7 @@ class KeeperTree:
             lnewnodes = []
 
             for action, key in self.Util.possible_keeper_actions(node.keeper_pos):
-                newnode = KeeperNode(node, action, node.move + key)
-
+                newnode = KeeperNode(node, action, node.move + key, node.heuristic + self.Util.heuristic(action, target_pos))
                 if newnode.keeper_pos not in self.get_path(node):
                     lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
@@ -141,4 +142,4 @@ class KeeperTree:
 
     def add_to_open(self,lnewnodes):
         self.keeper_nodes[:0] = lnewnodes
-      
+        self.keeper_nodes.sort(key=lambda node : node.heuristic)
