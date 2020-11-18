@@ -35,6 +35,7 @@ class SokobanTree:
         self.open_nodes = [self.root]
         self.KeeperTree = KeeperTree(self.Util)
         self.used_states = []
+        self.Util.dark_list = set([])
         
     def get_path(self, node):
         if node.parent == None:
@@ -64,7 +65,7 @@ class SokobanTree:
                 for action in box:
                     #print("{} {}".format(box, action))
                     curr_box_pos = node.boxes[box_num]
-
+                    #print(" ACTION: {} ; BOX POSITION: {}".format(action, curr_box_pos))
                     x, y = curr_box_pos
                     left = (- 1, 0)
                     right = (1, 0)
@@ -85,6 +86,7 @@ class SokobanTree:
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
 
                     keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
+                    #print("NODE MOVE: ", node.move)
 
                     if keeper_moves is not None:
                         new_boxes = deepcopy(node.boxes)

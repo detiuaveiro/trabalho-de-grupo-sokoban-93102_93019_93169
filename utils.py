@@ -8,7 +8,7 @@ class Util:
         self.curr_boxes = init_boxes
         self.move = None
         self.goals = self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL]) if map_state is not None else None
-        self.dark_list = set([])
+        self.dark_list = set([])  # Removes walls from search branches
 
     def heuristic_boxes(self, box):
         return min(self.heuristic(box, goal) for goal in self.goals)
@@ -115,7 +115,8 @@ class Util:
 
     def is_dead_end(self, pos):
         if self.is_blocked(pos) or self.is_trapped(pos):
-            self.dark_list.add(pos)
+            #print("Dark List: ", self.dark_list)
+            #self.dark_list.add(pos)
             return True
         # if self.no_goals_on_wall(pos):
         #     return True
@@ -127,6 +128,7 @@ class Util:
             Verifica se a pos não é uma parede, ou outra caixa
         """
         if self.get_tile(pos) == Tiles.WALL: 
+            self.dark_list.add(pos)
             return True
         if pos in self.curr_boxes: 
             return True
@@ -140,15 +142,22 @@ class Util:
         
         if self.get_tile(pos) == Tiles.GOAL:
             return False
-        
+
         cbx, cby, cwx, cwy = self.num_possibilities(pos)
 
-
+        #print(cbx, cby, cwx, cwy)
+        #print("POSITION: ", pos)
 
         # é canto nas paredes
         if cwx+cwy < 2 or (cwx == 1 and cwy == 1):
+            #print("CANTO NAS PAREDES")
             return True
 
+        if cbx == 1 and cby == 1:
+            #print("CANTO NAS CAIXAS")
+            return True
+
+        
         # # é "canto" nas caixas
         # if cbx < 2 and cby < 2:
         #     return True
