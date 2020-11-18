@@ -21,6 +21,7 @@ class SokobanTree:
         self.path_solution= None
         self.used_states = []
         self.KeeperTree = None
+
     
     """ 
         Quando passa de nível atribui um novo estado à SokobanTree e reseta os nodes

@@ -8,7 +8,8 @@ class Util:
         self.curr_boxes = init_boxes
         self.move = None
         self.goals = self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL]) if map_state is not None else None
-    
+        self.dark_list = set([])
+
     def heuristic_boxes(self, box):
         return min(self.heuristic(box, goal) for goal in self.goals)
 
@@ -75,21 +76,26 @@ class Util:
 
         # Left
         self.move = "left"
-        if not self.is_dead_end(left):
-            possible_moves.append(left)
+        if left not in self.dark_list:
+            if not self.is_dead_end(left):
+                possible_moves.append(left)
+    
         # Right
         self.move = "right"
-        if not self.is_dead_end(right):
-            possible_moves.append(right)
+        if right not in self.dark_list:
+            if not self.is_dead_end(right):
+                possible_moves.append(right)
         # Up
         self.move = "up"
-        if not self.is_dead_end(up):
-            possible_moves.append(up)
+        if up not in self.dark_list:
+            if not self.is_dead_end(up):
+                possible_moves.append(up)
         # Down
         self.move = "down"
-        if not self.is_dead_end(down):
-            possible_moves.append(down)
-
+        if down not in self.dark_list:
+            if not self.is_dead_end(down):
+                possible_moves.append(down)
+        
         return possible_moves
 
     # def no_goals_on_wall(self, pos):
@@ -109,6 +115,7 @@ class Util:
 
     def is_dead_end(self, pos):
         if self.is_blocked(pos) or self.is_trapped(pos):
+            self.dark_list.add(pos)
             return True
         # if self.no_goals_on_wall(pos):
         #     return True
@@ -120,7 +127,6 @@ class Util:
             Verifica se a pos não é uma parede, ou outra caixa
         """
         if self.get_tile(pos) == Tiles.WALL: 
-
             return True
         if pos in self.curr_boxes: 
             return True
