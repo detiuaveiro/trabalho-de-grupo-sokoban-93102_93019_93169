@@ -8,7 +8,7 @@ class Util:
         self.curr_boxes = init_boxes
         self.move = None
         self.goals = self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL]) if map_state is not None else None
-
+    
     def heuristic_boxes(self, box):
         return min(self.heuristic(box, goal) for goal in self.goals)
 
@@ -92,9 +92,26 @@ class Util:
 
         return possible_moves
 
+    # def no_goals_on_wall(self, pos):
+    #     x, y = pos
+
+    #     if self.move == "up":
+    #         return any(p == Tiles.GOAL or Tiles.MAN_ON_GOAL for p in self.map_state[x]) and self.get_tile((x,y-1)) == Tiles.WALL
+
+    #     if self.move == "down":
+    #         return any(p == Tiles.GOAL or Tiles.MAN_ON_GOAL for p in self.map_state[x]) and self.get_tile((x,y+1)) == Tiles.WALL
+
+    #     if self.move == "left":
+    #         return any(self.map_state[x][y] == Tiles.GOAL or Tiles.MAN_ON_GOAL for i in range(len(self.map_state[y]))) and self.get_tile((x-1,y)) == Tiles.WALL
+
+    #     if self.move == "right":
+    #         return any(self.map_state[x][y] == Tiles.GOAL or Tiles.MAN_ON_GOAL for i in range(len(self.map_state[y]))) and self.get_tile((x+1,y)) == Tiles.WALL
+
     def is_dead_end(self, pos):
         if self.is_blocked(pos) or self.is_trapped(pos):
             return True
+        # if self.no_goals_on_wall(pos):
+        #     return True
         return False
         
 
