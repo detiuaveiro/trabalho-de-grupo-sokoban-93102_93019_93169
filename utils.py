@@ -45,7 +45,7 @@ class Util:
         return min(self.heuristic(b, goal) for b in box  for goal in self.goals)
 
     def heuristic(self, pos1, pos2):
-        return math.sqrt((pos2[0]-pos1[0])**2 + (pos2[1]-pos1[1])**2)
+        return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
 
     def completed(self, curr_boxes, goal_boxes):
         """
