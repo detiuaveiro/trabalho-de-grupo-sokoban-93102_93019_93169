@@ -8,10 +8,41 @@ class Util:
         self.curr_boxes = init_boxes
         self.move = None
         self.goals = self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL]) if map_state is not None else None
-        self.dark_list = set([])  # Removes walls from search branches
+        self.dark_list=self.init_darklist() if self.goals is not None else None #init
+
+    def init_darklist(self):
+        dk_list=[]
+        block_positions=[]
+        tile_goal=False
+        for x in range(1, len(self.map_state[0])-1):
+            for y in range(1,len(self.map_state)):
+                block_positions.append((x,y))
+                if (x,y) in self.goals or (self.get_tile((x+1,y))!=Tiles.WALL and self.get_tile((x-1,y))!=Tiles.WALL):
+                    tile_goal= True
+                if self.get_tile((x,y))== Tiles.WALL:
+                    if not tile_goal:
+                        dk_list.extend(block_positions)
+                    block_positions=[]
+                    tile_goal=False
+            block_positions=[]
+            tile_goal=False
+
+        for y in range(1, len(self.map_state)-1):
+            for x in range(1,len(self.map_state[0])):
+                block_positions.append((x,y))
+                if (x,y) in self.goals or (self.get_tile((x,y+1))!=Tiles.WALL and self.get_tile((x,y-1))!=Tiles.WALL):
+                    tile_goal= True
+                if self.get_tile((x,y))== Tiles.WALL:
+                    if not tile_goal:
+                        dk_list.extend(block_positions)
+                    block_positions=[]
+                    tile_goal=False
+            block_positions=[]
+            tile_goal=False
+        return dk_list
 
     def heuristic_boxes(self, box):
-        return min(self.heuristic(box, goal) for goal in self.goals)
+        return min(self.heuristic(b, goal) for b in box  for goal in self.goals)
 
     def heuristic(self, pos1, pos2):
         return math.sqrt((pos2[0]-pos1[0])**2 + (pos2[1]-pos1[1])**2)
@@ -57,7 +88,6 @@ class Util:
         """
         self.curr_boxes = curr_boxes
         possible_actions =[]
-
         i = 0
         for box in curr_boxes:
             possible_actions.append((i, self.possible_moves(box)))
@@ -73,28 +103,23 @@ class Util:
         right = (x + 1, y)
         up = (x, y - 1)
         down = (x, y + 1)
-
         # Left
         self.move = "left"
-        if left not in self.dark_list:
-            if not self.is_dead_end(left):
-                possible_moves.append(left)
+        if not self.is_blocked(right) and  left not in self.dark_list and  not self.is_dead_end(left):
+            possible_moves.append(left)
     
         # Right
         self.move = "right"
-        if right not in self.dark_list:
-            if not self.is_dead_end(right):
-                possible_moves.append(right)
+        if not self.is_blocked(left) and right not in self.dark_list and not self.is_dead_end(right):
+            possible_moves.append(right)
         # Up
         self.move = "up"
-        if up not in self.dark_list:
-            if not self.is_dead_end(up):
-                possible_moves.append(up)
+        if not self.is_blocked(down) and up not in self.dark_list and not self.is_dead_end(up):
+            possible_moves.append(up)
         # Down
         self.move = "down"
-        if down not in self.dark_list:
-            if not self.is_dead_end(down):
-                possible_moves.append(down)
+        if not self.is_blocked(up) and down not in self.dark_list and not self.is_dead_end(down):
+            possible_moves.append(down)
         
         return possible_moves
 
@@ -128,7 +153,7 @@ class Util:
             Verifica se a pos não é uma parede, ou outra caixa
         """
         if self.get_tile(pos) == Tiles.WALL: 
-            self.dark_list.add(pos)
+            #self.dark_list.add(pos)
             return True
         if pos in self.curr_boxes: 
             return True
@@ -149,13 +174,13 @@ class Util:
         #print("POSITION: ", pos)
 
         # é canto nas paredes
-        if cwx+cwy < 2 or (cwx == 1 and cwy == 1):
+        if cwx+cwy < 2 or (cwx <= 1 and cwy <= 1):
             #print("CANTO NAS PAREDES")
             return True
 
-        if cbx == 1 and cby == 1:
+        #if cbx == 1 and cby == 1:
             #print("CANTO NAS CAIXAS")
-            return True
+        #    return True
 
         
         # # é "canto" nas caixas
