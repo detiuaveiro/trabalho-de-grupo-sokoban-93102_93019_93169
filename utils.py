@@ -42,7 +42,20 @@ class Util:
         return dk_list
 
     def heuristic_boxes(self, box):
-        return min(self.heuristic(b, goal) for b in box  for goal in self.goals)
+        calc_costs=sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
+        matchedBoxes=[]
+        matchedGoals=[]
+        heur=0
+        while calc_costs != []:
+            (b,goal)=calc_costs.pop()
+            if b not in matchedBoxes and goal not in matchedGoals:
+                heur+=self.heuristic(b,goal)
+                matchedBoxes.append(b)
+                matchedGoals.append(goal)
+        for b in box:
+            if b not in matchedBoxes:
+                heur+= min([self.heuristic(goal,b) for goal in self.goals])
+        return heur
 
     def heuristic(self, pos1, pos2):
         return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
@@ -164,7 +177,8 @@ class Util:
             Verifica se a pos é um canto
             Mais para a frente -> + Adicionar lateral sem goals
         """
-        
+        print(pos)
+
         if self.get_tile(pos) == Tiles.GOAL:
             return False
 
@@ -175,6 +189,7 @@ class Util:
 
         # é canto nas paredes
         if cwx+cwy < 2 or (cwx <= 1 and cwy <= 1):
+            print("canto")
             #print("CANTO NAS PAREDES")
             return True
 

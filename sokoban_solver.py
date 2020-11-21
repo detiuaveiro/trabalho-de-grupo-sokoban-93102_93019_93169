@@ -89,7 +89,7 @@ class SokobanTree:
                         new_boxes = deepcopy(node.boxes)
                         new_boxes[box_num] = action
                         
-                        newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos, node.heuristic + self.Util.heuristic_boxes(new_boxes))
+                        newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos,  self.Util.heuristic_boxes(new_boxes))
 
                         if (newnode.boxes, newnode.keeper) not in self.used_states:
                             lnewnodes.append(newnode)
