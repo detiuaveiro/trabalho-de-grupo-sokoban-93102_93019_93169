@@ -46,11 +46,11 @@ class SokobanTree:
     async def search(self):
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
+            
 
-            self.used_states.append((node.boxes, node.keeper))
-
+            self.used_states.append((set(node.boxes), node.keeper))
+            
             if self.Util.completed(node.boxes, self.goal_boxes):
-                print(node.move)
                 self.path_solution = node.move
                 return node.move
 
@@ -60,11 +60,9 @@ class SokobanTree:
                 while True:
                     await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
                     break
-                
                 for action in box:
                     #print("{} {}".format(box, action))
                     curr_box_pos = node.boxes[box_num]
-                    #print(" ACTION: {} ; BOX POSITION: {}".format(action, curr_box_pos))
                     x, y = curr_box_pos
                     left = (- 1, 0)
                     right = (1, 0)
@@ -83,15 +81,15 @@ class SokobanTree:
                         push = "s"  
                     # 2*pos atual da caixa - posição para onde vai
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
-                    keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
 
+                    keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
+                    #print(" ACTION: {} ; BOX POSITION: {}; Keeper_Moves {}".format(action, curr_box_pos,keeper_moves))
                     if keeper_moves is not None:
                         new_boxes = deepcopy(node.boxes)
                         new_boxes[box_num] = action
                         
                         newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos, self.Util.heuristic_boxes(new_boxes))
-
-                        if (newnode.boxes, newnode.keeper) not in self.used_states:
+                        if (set(newnode.boxes), newnode.keeper) not in self.used_states:
                             lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
         return None
@@ -119,7 +117,7 @@ class KeeperTree:
         path = self.get_path(node.parent)
         path += [node.keeper_pos]
         return path
-
+    
     def search_keeper(self, target_pos, keeper_pos):
         self.keeper_nodes = [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
 
