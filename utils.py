@@ -177,7 +177,6 @@ class Util:
             Verifica se a pos é um canto
             Mais para a frente -> + Adicionar lateral sem goals
         """
-        print(pos)
 
         if self.get_tile(pos) == Tiles.GOAL:
             return False
@@ -189,10 +188,11 @@ class Util:
 
         # é canto nas paredes
         if cwx+cwy < 2 or (cwx <= 1 and cwy <= 1):
-            print("canto")
             #print("CANTO NAS PAREDES")
             return True
-
+        if (cwx==0 and cby<=1) or (cwy==0 and cbx<=1):
+            return True
+            
         #if cbx == 1 and cby == 1:
             #print("CANTO NAS CAIXAS")
         #    return True

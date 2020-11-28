@@ -50,7 +50,7 @@ class SokobanTree:
             self.used_states.append((node.boxes, node.keeper))
 
             if self.Util.completed(node.boxes, self.goal_boxes):
-              
+                print(node.move)
                 self.path_solution = node.move
                 return node.move
 
@@ -83,13 +83,13 @@ class SokobanTree:
                         push = "s"  
                     # 2*pos atual da caixa - posição para onde vai
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
-
                     keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
+
                     if keeper_moves is not None:
                         new_boxes = deepcopy(node.boxes)
                         new_boxes[box_num] = action
                         
-                        newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos,  self.Util.heuristic_boxes(new_boxes))
+                        newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos, self.Util.heuristic_boxes(new_boxes))
 
                         if (newnode.boxes, newnode.keeper) not in self.used_states:
                             lnewnodes.append(newnode)
