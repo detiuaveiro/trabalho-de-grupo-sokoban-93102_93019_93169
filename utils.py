@@ -11,6 +11,9 @@ class Util:
         self.dark_list=self.init_darklist() if self.goals is not None else None #init
 
     def init_darklist(self):
+        """
+            Tracks WALLS and rows without goals
+        """
         dk_list=[]
         block_positions=[]
         tile_goal=False
@@ -60,7 +63,7 @@ class Util:
     def heuristic(self, pos1, pos2):
         return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
 
-    def completed(self, curr_boxes, goal_boxes):
+    async def completed(self, curr_boxes, goal_boxes):
         """
             Given the goal boxes and the current boxes, checks if they match
         """
@@ -94,7 +97,7 @@ class Util:
 
         return possible_moves
 
-    def possible_actions(self, curr_boxes):
+    async def possible_actions(self, curr_boxes):
         """
             Possible actions vai ser a lista de ações possiveis de todas as caixas
             Devolve uma lista de ações possiveis
@@ -177,7 +180,7 @@ class Util:
             Verifica se a pos é um canto
             Mais para a frente -> + Adicionar lateral sem goals
         """
-        print(pos)
+        #print(pos)
 
         if self.get_tile(pos) == Tiles.GOAL:
             return False
@@ -196,6 +199,70 @@ class Util:
         #if cbx == 1 and cby == 1:
             #print("CANTO NAS CAIXAS")
         #    return True
+
+        # Verificar se 3 caixas estao juntas (aka canto)
+        # verificar caixas na diagonal 
+
+
+
+        # Verificar se 4 caixas estao juntas (aka canto)
+        diagonal_left_up = self.get_tile((pos[0]-1, pos[1]-1))
+        diagonal_left_down = self.get_tile((pos[0]-1, pos[1]+1))
+        left = self.get_tile((pos[0]-1, pos[1]))
+        diagonal_right_up = self.get_tile((pos[0]+1, pos[1]-1))
+        diagonal_right_down = self.get_tile((pos[0]+1, pos[1]+1))
+        right = self.get_tile((pos[0]+1, pos[1]))
+        up = self.get_tile((pos[0], pos[1]-1))
+        down = self.get_tile((pos[0], pos[1]+1))
+        if self.move == "left":
+            if ((diagonal_left_up == Tiles.BOX or diagonal_left_up == Tiles.BOX_ON_GOAL or diagonal_left_up == Tiles.WALL) 
+                and (left == Tiles.BOX or left == Tiles.BOX_ON_GOAL) 
+                and (up == Tiles.BOX or up == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL LEFT UP ", self.curr_boxes, pos)
+                return True
+            elif ((diagonal_left_down == Tiles.BOX or diagonal_left_down == Tiles.BOX_ON_GOAL or diagonal_left_down == Tiles.WALL) 
+                and (left == Tiles.BOX or left == Tiles.BOX_ON_GOAL) 
+                and (down == Tiles.BOX or down == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL LEFT DOWN ", self.curr_boxes, pos)
+                return True
+
+        if self.move == "right":
+            if ((diagonal_right_up == Tiles.BOX or diagonal_right_up == Tiles.BOX_ON_GOAL or diagonal_right_up == Tiles.WALL) 
+                and (right == Tiles.BOX or right == Tiles.BOX_ON_GOAL) 
+                and (up == Tiles.BOX or up == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL RIGHT UP", self.curr_boxes, pos)
+                return True
+            elif ((diagonal_right_down == Tiles.BOX or diagonal_right_down == Tiles.BOX_ON_GOAL or diagonal_right_down == Tiles.WALL) 
+                and (right == Tiles.BOX or right == Tiles.BOX_ON_GOAL) 
+                and (down == Tiles.BOX or down == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL RIGHT DOWN", self.curr_boxes, pos)
+                return True
+
+        if self.move == "down":
+            if ((diagonal_left_down == Tiles.BOX or diagonal_left_down == Tiles.BOX_ON_GOAL or diagonal_left_down == Tiles.WALL) 
+                and (left == Tiles.BOX or left == Tiles.BOX_ON_GOAL) 
+                and (down == Tiles.BOX or down == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL DOWN LEFT", self.curr_boxes, pos)
+                return True
+            elif ((diagonal_right_down == Tiles.BOX or diagonal_right_down == Tiles.BOX_ON_GOAL or diagonal_right_down == Tiles.WALL) 
+                and (right == Tiles.BOX or right == Tiles.BOX_ON_GOAL) 
+                and (down == Tiles.BOX or down == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL DOWN RIGHT", self.curr_boxes, pos)
+                return True
+
+        if self.move == "up":
+            if ((diagonal_right_up == Tiles.BOX or diagonal_right_up == Tiles.BOX_ON_GOAL or diagonal_right_up == Tiles.WALL) 
+                and (right == Tiles.BOX or right == Tiles.BOX_ON_GOAL) 
+                and (up == Tiles.BOX or up == Tiles.BOX_ON_GOAL)):
+                print("DIAGONAL UP RIGHT", self.curr_boxes, pos)
+                return True
+            elif ((diagonal_left_up == Tiles.BOX or diagonal_left_up == Tiles.BOX_ON_GOAL or diagonal_left_up == Tiles.WALL) 
+                and (left == Tiles.BOX or left == Tiles.BOX_ON_GOAL ) 
+                and (up == Tiles.BOX or up == Tiles.BOX_ON_GOAL )):
+                print("DIAGONAL UP LEFT", self.curr_boxes, pos)
+                return True
+
+
 
         
         # # é "canto" nas caixas

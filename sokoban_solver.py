@@ -26,7 +26,7 @@ class SokobanTree:
     """ 
         Quando passa de nível atribui um novo estado à SokobanTree e reseta os nodes
     """
-    def update_level (self, new_map_state, new_init_boxes, new_goal_boxes):
+    async def update_level (self, new_map_state, new_init_boxes, new_goal_boxes):
         self.map_state = new_map_state
         self.init_boxes = new_init_boxes
         self.Util = Util(self.map_state, self.init_boxes)
@@ -47,24 +47,24 @@ class SokobanTree:
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
 
-            self.used_states.append((node.boxes, node.keeper))
-
-            if self.Util.completed(node.boxes, self.goal_boxes):
+            self.used_states.append((set(node.boxes), node.keeper))
+            
+            if await self.Util.completed(node.boxes, self.goal_boxes):
               
                 self.path_solution = node.move
                 return node.move
 
             lnewnodes = []
     
-            for box_num, box in self.Util.possible_actions(node.boxes):
+            for box_num, box in await self.Util.possible_actions(node.boxes):
                 while True:
                     await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
                     break
-                
+
                 for action in box:
                     #print("{} {}".format(box, action))
                     curr_box_pos = node.boxes[box_num]
-                    #print(" ACTION: {} ; BOX POSITION: {}".format(action, curr_box_pos))
+                    print(" ACTION: {} ; BOX POSITION: {}".format(action, curr_box_pos))
                     x, y = curr_box_pos
                     left = (- 1, 0)
                     right = (1, 0)
@@ -84,14 +84,14 @@ class SokobanTree:
                     # 2*pos atual da caixa - posição para onde vai
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
 
-                    keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
+                    keeper_moves = await self.KeeperTree.search_keeper(keeper_target, node.keeper)
                     if keeper_moves is not None:
                         new_boxes = deepcopy(node.boxes)
                         new_boxes[box_num] = action
                         
                         newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos,  self.Util.heuristic_boxes(new_boxes))
 
-                        if (newnode.boxes, newnode.keeper) not in self.used_states:
+                        if (set(newnode.boxes), newnode.keeper) not in self.used_states:
                             lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
         return None
@@ -119,8 +119,8 @@ class KeeperTree:
         path = self.get_path(node.parent)
         path += [node.keeper_pos]
         return path
-
-    def search_keeper(self, target_pos, keeper_pos):
+    
+    async def search_keeper(self, target_pos, keeper_pos):
         self.keeper_nodes = [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
 
         while self.keeper_nodes != []:

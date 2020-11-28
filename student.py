@@ -19,7 +19,7 @@ async def solver(puzzle, solution):
         mapa = Map(game_properties["map"])
         print(mapa)
 
-        SokobanTree.update_level(mapa._map, mapa.filter_tiles([Tiles.BOX, Tiles.BOX_ON_GOAL]), mapa.filter_tiles([Tiles.GOAL, Tiles.BOX_ON_GOAL, Tiles.MAN_ON_GOAL]))
+        await SokobanTree.update_level(mapa._map, mapa.filter_tiles([Tiles.BOX, Tiles.BOX_ON_GOAL]), mapa.filter_tiles([Tiles.GOAL, Tiles.BOX_ON_GOAL, Tiles.MAN_ON_GOAL]))
 
         keys = await SokobanTree.search()
         await solution.put(keys)
