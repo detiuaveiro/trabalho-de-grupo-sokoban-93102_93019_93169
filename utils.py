@@ -10,39 +10,92 @@ class Util:
         self.goals = self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL]) if map_state is not None else None
         self.dark_list=self.init_darklist() if self.goals is not None else None #init
 
-    def init_darklist(self):
-        """
-            Tracks WALLS and rows without goals
-        """
-        dk_list=[]
-        block_positions=[]
-        tile_goal=False
-        for x in range(1, len(self.map_state[0])-1):
-            for y in range(1,len(self.map_state)):
-                block_positions.append((x,y))
-                if (x,y) in self.goals or (self.get_tile((x+1,y))!=Tiles.WALL and self.get_tile((x-1,y))!=Tiles.WALL):
-                    tile_goal= True
-                if self.get_tile((x,y))== Tiles.WALL:
-                    if not tile_goal:
-                        dk_list.extend(block_positions)
-                    block_positions=[]
-                    tile_goal=False
-            block_positions=[]
-            tile_goal=False
+    # def init_darklist(self):
+    #     """
+    #         Tracks WALLS and rows without goals
+    #     """
+    #     dk_list=[]
+    #     block_positions=[]
+    #     tile_goal=False
+    #     for x in range(1, len(self.map_state[0])-1):
+    #         for y in range(1,len(self.map_state)):
+    #             block_positions.append((x,y))
+    #             if (x,y) in self.goals or (self.get_tile((x+1,y))!=Tiles.WALL and self.get_tile((x-1,y))!=Tiles.WALL):
+    #                 tile_goal= True
+    #             if self.get_tile((x,y))== Tiles.WALL:
+    #                 if not tile_goal:
+    #                     dk_list.extend(block_positions)
+    #                 block_positions=[]
+    #                 tile_goal=False
+    #         block_positions=[]
+    #         tile_goal=False
 
-        for y in range(1, len(self.map_state)-1):
-            for x in range(1,len(self.map_state[0])):
-                block_positions.append((x,y))
-                if (x,y) in self.goals or (self.get_tile((x,y+1))!=Tiles.WALL and self.get_tile((x,y-1))!=Tiles.WALL):
-                    tile_goal= True
-                if self.get_tile((x,y))== Tiles.WALL:
-                    if not tile_goal:
-                        dk_list.extend(block_positions)
-                    block_positions=[]
-                    tile_goal=False
-            block_positions=[]
-            tile_goal=False
-        return dk_list
+    #     for y in range(1, len(self.map_state)-1):
+    #         for x in range(1,len(self.map_state[0])):
+    #             block_positions.append((x,y))
+    #             if (x,y) in self.goals or (self.get_tile((x,y+1))!=Tiles.WALL and self.get_tile((x,y-1))!=Tiles.WALL):
+    #                 tile_goal= True
+    #             if self.get_tile((x,y))== Tiles.WALL:
+    #                 if not tile_goal:
+    #                     dk_list.extend(block_positions)
+    #                 block_positions=[]
+    #                 tile_goal=False
+    #         block_positions=[]
+    #         tile_goal=False
+    #     return dk_list
+
+    def init_darklist(self):
+        dark_list = {}
+
+        for x, y in self.goals:
+            visited_nodes = [(x,y)]
+            open_nodes = [(x,y)]
+            while open_nodes != []:
+                node = open_nodes.pop(0)
+                print(node)
+                x, y = node
+
+                left = (x - 1, y)
+
+                if left not in visited_nodes:
+                    if self.get_tile(left) != Tiles.WALL:
+                        if self.get_tile((x - 2, y)) == Tiles.WALL:
+                            if left in dark_list:
+                                dark_list[left] += 1
+                            else:
+                                dark_list[left] = 0
+
+                right = (x + 1, y)
+                if right not in visited_nodes:
+                    if self.get_tile(right) != Tiles.WALL:
+                        if self.get_tile((x + 2, y)) == Tiles.WALL:
+                            if right in dark_list:
+                                dark_list[right] += 1
+                            else:
+                                dark_list[right] = 0
+
+                up = (x, y - 1)
+                if up not in visited_nodes:
+                    if self.get_tile(up) != Tiles.WALL:
+                        if self.get_tile((x, y - 2)) == Tiles.WALL:
+                            if up in dark_list:
+                                dark_list[up] += 1
+                            else:
+                                dark_list[up] = 0
+
+                down = (x, y + 1)
+                if down not in visited_nodes:
+                    if self.get_tile(down) != Tiles.WALL:
+                        if self.get_tile((x, y + 2)) == Tiles.WALL:
+                            if down in dark_list:
+                                dark_list[down] += 1
+                            else:
+                                dark_list[down] = 0
+
+        print(dark_list)
+
+        return dark_list
+
 
     def heuristic_boxes(self, box):
         calc_costs=sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
