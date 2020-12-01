@@ -56,10 +56,8 @@ class SokobanTree:
 
             lnewnodes = []
     
-            for box_num, box in self.Util.possible_actions(node.boxes):
-                while True:
-                    await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
-                    break
+            for box_num, box in await self.Util.possible_actions(node.boxes):
+                await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
                 for action in box:
                     #print("{} {}".format(box, action))
                     curr_box_pos = node.boxes[box_num]
@@ -82,7 +80,7 @@ class SokobanTree:
                     # 2*pos atual da caixa - posição para onde vai
                     keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
 
-                    keeper_moves = self.KeeperTree.search_keeper(keeper_target, node.keeper)
+                    keeper_moves = await self.KeeperTree.search_keeper(keeper_target, node.keeper)
                     #print(" ACTION: {} ; BOX POSITION: {}; Keeper_Moves {}".format(action, curr_box_pos,keeper_moves))
                     if keeper_moves is not None:
                         new_boxes = deepcopy(node.boxes)
@@ -118,10 +116,11 @@ class KeeperTree:
         path += [node.keeper_pos]
         return path
     
-    def search_keeper(self, target_pos, keeper_pos):
+    async def search_keeper(self, target_pos, keeper_pos):
         self.keeper_nodes = [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
 
         while self.keeper_nodes != []:
+            await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
 
             node = self.keeper_nodes.pop(0)
 
@@ -131,7 +130,7 @@ class KeeperTree:
 
             lnewnodes = []
 
-            for action, key in self.Util.possible_keeper_actions(node.keeper_pos):
+            for action, key in await self.Util.possible_keeper_actions(node.keeper_pos):
                 newnode = KeeperNode(node, action, node.move + key, node.heuristic + self.Util.heuristic(action, target_pos))
                 if newnode.keeper_pos not in self.get_path(node):
                     lnewnodes.append(newnode)

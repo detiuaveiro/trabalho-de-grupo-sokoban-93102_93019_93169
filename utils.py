@@ -1,6 +1,7 @@
 from mapa import Map
 from consts import Tiles, TILES
 import math
+import asyncio
 
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
@@ -122,7 +123,8 @@ class Util:
         """
         return all(box in goal_boxes for box in curr_boxes)
 
-    def possible_keeper_actions(self, keeper_pos):
+    async def possible_keeper_actions(self, keeper_pos):
+        await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
         possible_moves = []
 
         x, y = keeper_pos
@@ -150,11 +152,12 @@ class Util:
 
         return possible_moves
 
-    def possible_actions(self, curr_boxes):
+    async def possible_actions(self, curr_boxes):
         """
             Possible actions vai ser a lista de ações possiveis de todas as caixas
             Devolve uma lista de ações possiveis
         """
+        await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
         self.curr_boxes = curr_boxes
         possible_actions =[]
         i = 0

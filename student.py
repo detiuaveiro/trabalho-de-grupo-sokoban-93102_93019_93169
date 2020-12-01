@@ -22,6 +22,7 @@ async def solver(puzzle, solution):
         SokobanTree.update_level(mapa._map, mapa.filter_tiles([Tiles.BOX, Tiles.BOX_ON_GOAL]), mapa.filter_tiles([Tiles.GOAL, Tiles.BOX_ON_GOAL, Tiles.MAN_ON_GOAL]))
 
         keys = await SokobanTree.search()
+        print(">>", keys)
 
         await solution.put(keys)
 
