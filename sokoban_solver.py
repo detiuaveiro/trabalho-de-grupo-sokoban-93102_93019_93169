@@ -115,7 +115,6 @@ class KeeperNode:
 
 class KeeperTree:
     def __init__(self, Util):
-        self.solution = None
         self.Util = Util
         self.keeper_nodes = None
 
@@ -135,7 +134,6 @@ class KeeperTree:
             node = self.keeper_nodes.pop(0)
 
             if node.keeper_pos == target_pos:
-                self.solution = node.move
                 return node.move
 
             lnewnodes = []
