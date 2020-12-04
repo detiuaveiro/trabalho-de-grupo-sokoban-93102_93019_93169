@@ -18,7 +18,6 @@ class Util:
 
         visited = [[0] * vert_tiles for _ in range(horz_tiles)]
         
-        dk_list = set()
 
         def check_not_blocked(pos):
             x, y = pos
@@ -38,43 +37,9 @@ class Util:
             return
 
         [check_not_blocked((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
-        [dk_list.add((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if not visited[x][y]]
 
-        return dk_list
+        return visited
 
- # def init_darklist(self):
-    #     """
-    #         Tracks WALLS and rows without goals
-    #     """
-    #     dk_list=set([])
-    #     block_positions=[]
-    #     tile_goal=False
-    #     for x in range(1, len(self.map_state[0])-1):
-    #         for y in range(1,len(self.map_state)):
-    #             block_positions.append((x,y))
-    #             if (x,y) in self.goals or (self.get_tile((x+1,y))!=Tiles.WALL and self.get_tile((x-1,y))!=Tiles.WALL):
-    #                 tile_goal= True
-    #             if self.get_tile((x,y))== Tiles.WALL:
-    #                 if not tile_goal:
-    #                     dk_list.update(block_positions)
-    #                 block_positions=[]
-    #                 tile_goal=False
-    #         block_positions=[]
-    #         tile_goal=False
-
-    #     for y in range(1, len(self.map_state)-1):
-    #         for x in range(1,len(self.map_state[0])):
-    #             block_positions.append((x,y))
-    #             if (x,y) in self.goals or (self.get_tile((x,y+1))!=Tiles.WALL and self.get_tile((x,y-1))!=Tiles.WALL):
-    #                 tile_goal= True
-    #             if self.get_tile((x,y)) == Tiles.WALL:
-    #                 if not tile_goal:
-    #                     dk_list.update(block_positions)
-    #                 block_positions=[]
-    #                 tile_goal=False
-    #         block_positions=[]
-    #         tile_goal=False
-    #     return dk_list
 
     def heuristic_boxes(self, box):
         calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
@@ -156,19 +121,19 @@ class Util:
         down = (x, y + 1)
         # Left
         self.move = "left"
-        if left not in self.dark_list and left not in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
+        if self.dark_list[x-1][y] and left not in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
             possible_moves.append(left)
         # Right
         self.move = "right"
-        if right not in self.dark_list and right not in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
+        if self.dark_list[x+1][y] and right not in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
             possible_moves.append(right)
         # Up
         self.move = "up"
-        if up not in self.dark_list and up not in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
+        if self.dark_list[x][y-1] and up not in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
             possible_moves.append(up)
         # Down
         self.move = "down"
-        if down not in self.dark_list and down not in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
+        if self.dark_list[x][y+1] and down not in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
             possible_moves.append(down)
         return possible_moves
 
@@ -200,7 +165,7 @@ class Util:
             if self.get_tile(left) == Tiles.WALL or self.get_tile(right) == Tiles.WALL:
                 horizontal_block = True
 
-            if not horizontal_block and left in self.dark_list and right in self.dark_list:
+            if not horizontal_block and not self.dark_list[pos[0]-1][pos[1]] and  not self.dark_list[pos[0]+1][pos[1]]:
                 horizontal_block = True
 
             # verificar se uma das caixas ao lado está blocked
@@ -219,7 +184,7 @@ class Util:
                 vertical_block = True
             
             # Verificar se esta na darklist
-            if not vertical_block and up in self.dark_list and down in self.dark_list:
+            if not vertical_block and not self.dark_list[pos[0]][pos[1]-1] and not self.dark_list[pos[0]][pos[1]+1]:
                 vertical_block = True
 
             # verificar se uma das caixas ao lado está blocked
