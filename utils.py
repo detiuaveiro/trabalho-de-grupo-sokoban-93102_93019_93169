@@ -14,7 +14,6 @@ class Util:
         self.box = None
 
     def init_darklist(self):
-        print(self.goals)
         horz_tiles, vert_tiles = len(self.map_state[0]), len(self.map_state)
 
         visited = [[0] * vert_tiles for _ in range(horz_tiles)]
@@ -41,7 +40,6 @@ class Util:
         [check_not_blocked((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
         [dk_list.add((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if not visited[x][y]]
 
-        print(dk_list)
         return dk_list
 
  # def init_darklist(self):
@@ -158,21 +156,20 @@ class Util:
         down = (x, y + 1)
         # Left
         self.move = "left"
-        if left not in self.dark_list and left not in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left):
+        if left not in self.dark_list and left not in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
             possible_moves.append(left)
         # Right
         self.move = "right"
-        if right not in self.dark_list and right not in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right):
+        if right not in self.dark_list and right not in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
             possible_moves.append(right)
         # Up
         self.move = "up"
-        if up not in self.dark_list and up not in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up):
+        if up not in self.dark_list and up not in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
             possible_moves.append(up)
         # Down
         self.move = "down"
-        if down not in self.dark_list and down not in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down):
+        if down not in self.dark_list and down not in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
             possible_moves.append(down)
-        
         return possible_moves
 
     # def is_dead_end(self, pos):
@@ -190,7 +187,7 @@ class Util:
             return True
         return False
 
-    def freeze_deadlock(self, pos, tipo=None, boxes_checked=set()):
+    def freeze_deadlock(self, pos,  boxes_checked,tipo=None):
 
         boxes_checked.add(pos)
 
@@ -207,9 +204,9 @@ class Util:
                 horizontal_block = True
 
             # verificar se uma das caixas ao lado está blocked
-            if not horizontal_block and left in self.curr_boxes and left != self.box and self.freeze_deadlock(left, "vertical", boxes_checked):
+            if not horizontal_block and left in self.curr_boxes and left != self.box and self.freeze_deadlock(left,  boxes_checked, "vertical"):
                 horizontal_block = True
-            if not horizontal_block and right in self.curr_boxes and right != self.box and self.freeze_deadlock(right, "vertical", boxes_checked):
+            if not horizontal_block and right in self.curr_boxes and right != self.box and self.freeze_deadlock(right, boxes_checked, "vertical"):
                 horizontal_block = True
 
         vertical_block = True
@@ -226,9 +223,9 @@ class Util:
                 vertical_block = True
 
             # verificar se uma das caixas ao lado está blocked
-            if not vertical_block and up in self.curr_boxes and up != self.box and self.freeze_deadlock(up, "horizontal", boxes_checked):
+            if not vertical_block and up in self.curr_boxes and up != self.box and self.freeze_deadlock(up, boxes_checked, "horizontal"):
                 vertical_block = True
-            if not vertical_block and down in self.curr_boxes and down != self.box and self.freeze_deadlock(down, "horizontal", boxes_checked):
+            if not vertical_block and down in self.curr_boxes and down != self.box and self.freeze_deadlock(down, boxes_checked, "horizontal"):
                 vertical_block = True
 
         if all(box in self.goals for box in boxes_checked):

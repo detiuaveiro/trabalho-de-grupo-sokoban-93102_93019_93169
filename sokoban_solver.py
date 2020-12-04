@@ -57,7 +57,6 @@ class SokobanTree:
             for box_num, box in await self.Util.possible_actions(node.boxes):
                 await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
                 for action in box:
-                    #print("{} {}".format(box, action))
                     curr_box_pos = node.boxes[box_num]
                     x, y = curr_box_pos
                     left = (- 1, 0)
