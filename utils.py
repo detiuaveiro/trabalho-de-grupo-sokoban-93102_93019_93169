@@ -2,7 +2,7 @@ from mapa import Map
 from consts import Tiles, TILES
 import math
 import asyncio
-import time
+import functools
 
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
@@ -46,15 +46,12 @@ class Util:
         matchedBoxes=[]
         matchedGoals=[]
         heur=0
-        while calc_costs != []:
-            (b,goal)=calc_costs.pop(0)
+        for b, goal in calc_costs:
             if b not in matchedBoxes and goal not in matchedGoals:
                 heur+=self.heuristic(b,goal)
                 matchedBoxes.append(b)
                 matchedGoals.append(goal)
-        for b in box:
-            if b not in matchedBoxes:
-                heur += min([self.heuristic(goal,b) for goal in self.goals])
+    
         return heur
 
     def heuristic(self, pos1, pos2):
@@ -232,24 +229,7 @@ class Util:
             #print("VERTICAL BLOCK DARKLIST")
             vertical_block = True
 
-        # # Se existe uma caixa a esquerda ou direita, a pos esta blocked se a outra caixa estiver blocked
-        # if not horizontal_block and left in self.curr_boxes and left not in no_check:
-        #     if self.is_trapped(left, no_check):
-        #         #print("HORIZONTAL BLOCK NO-CHECK L")
-        #         horizontal_block = True
-        # if not horizontal_block and right in self.curr_boxes and right not in no_check:
-        #     if self.is_trapped(right, no_check):
-        #         #print("HORIZONTAL BLOCK NO-CHECK R")
-        #         horizontal_block = True
-        # # Se existe uma caixa acima ou embaixo, a pos esta blocked se a outra caixa estiver blocked
-        # if not vertical_block and up in self.curr_boxes and up not in no_check:
-        #     if self.is_trapped(up, no_check):
-        #         #print("VERTICAL BLOCK NO-CHECK U")
-        #         vertical_block = True
-        # if not vertical_block and down in self.curr_boxes and down not in no_check:
-        #     if self.is_trapped(down, no_check):
-        #         #print("VERTICAL BLOCK NO-CHECK D")
-        #         vertical_block = True
+
         
         if vertical_block and horizontal_block:
             print(pos)
