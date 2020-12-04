@@ -2,7 +2,6 @@ from mapa import Map
 from consts import Tiles, TILES
 import math
 import asyncio
-import functools
 
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
@@ -43,15 +42,14 @@ class Util:
 
     def heuristic_boxes(self, box):
         calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
-        matchedBoxes=[]
-        matchedGoals=[]
+        matchedBoxes=set()
+        matchedGoals=set()
         heur=0
         for b, goal in calc_costs:
-            if b not in matchedBoxes and goal not in matchedGoals:
+            if not b in matchedBoxes and not goal in matchedGoals:
                 heur+=self.heuristic(b,goal)
-                matchedBoxes.append(b)
-                matchedGoals.append(goal)
-    
+                matchedBoxes.add(b)
+                matchedGoals.add(goal)
         return heur
 
     def heuristic(self, pos1, pos2):
@@ -99,7 +97,7 @@ class Util:
         """
         await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
         self.curr_boxes = curr_boxes
-        possible_actions =[]
+        possible_actions = []
         i = 0
         for box in curr_boxes:
             possible_actions.append((i, self.possible_moves(box)))
@@ -109,7 +107,7 @@ class Util:
 
     def possible_moves(self, box):
         self.box = box
-        possible_moves = []
+        possible_moves = set()
 
         x, y = box
         left = (x - 1, y)
@@ -118,20 +116,20 @@ class Util:
         down = (x, y + 1)
         # Left
         self.move = "left"
-        if self.dark_list[x-1][y] and left not in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
-            possible_moves.append(left)
+        if self.dark_list[x-1][y] and not left in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
+            possible_moves.add(left)
         # Right
         self.move = "right"
-        if self.dark_list[x+1][y] and right not in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
-            possible_moves.append(right)
+        if self.dark_list[x+1][y] and not right in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
+            possible_moves.add(right)
         # Up
         self.move = "up"
-        if self.dark_list[x][y-1] and up not in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
-            possible_moves.append(up)
+        if self.dark_list[x][y-1] and not up in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
+            possible_moves.add(up)
         # Down
         self.move = "down"
-        if self.dark_list[x][y+1] and down not in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
-            possible_moves.append(down)
+        if self.dark_list[x][y+1] and not down in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
+            possible_moves.add(down)
         return possible_moves
 
     # def is_dead_end(self, pos):
@@ -162,7 +160,7 @@ class Util:
             if self.get_tile(left) == Tiles.WALL or self.get_tile(right) == Tiles.WALL:
                 horizontal_block = True
 
-            if not horizontal_block and not self.dark_list[pos[0]-1][pos[1]] and  not self.dark_list[pos[0]+1][pos[1]]:
+            if not horizontal_block and not self.dark_list[pos[0]-1][pos[1]] and not self.dark_list[pos[0]+1][pos[1]]:
                 horizontal_block = True
 
             # verificar se uma das caixas ao lado está blocked
@@ -229,20 +227,16 @@ class Util:
             #print("VERTICAL BLOCK DARKLIST")
             vertical_block = True
 
-
-        
         if vertical_block and horizontal_block:
             print(pos)
 
         return vertical_block and horizontal_block
 
-    
     def get_tile(self, pos):      
         """Retrieve tile at position pos."""
         x, y = pos
         return self.map_state[y][x]
     
-
     def filter_tiles (self, list_to_filter):
         """Util to retrieve list of coordinates of given tiles."""
         return [
