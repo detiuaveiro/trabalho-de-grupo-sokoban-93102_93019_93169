@@ -86,14 +86,18 @@ class SokobanTree:
                             self.used_states[h] = [newnode.keeper]
                             lnewnodes.append(newnode)
                         else:
-                            x = False
-                            for pos in self.used_states[h]:
-                                if await self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
-                                    x = True
-                                    break
-                            if not x:
+                            if not node.keeper in self.used_states[h]:
                                 self.used_states[h] += [newnode.keeper]
                                 lnewnodes.append(newnode)
+
+                            # x = False
+                            # for pos in self.used_states[h]:
+                            #     if await self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
+                            #         x = True
+                            #         break
+                            # if not x:
+                            #     self.used_states[h] += [newnode.keeper]
+                            #     lnewnodes.append(newnode)
 
             self.add_to_open(lnewnodes)
         return None
