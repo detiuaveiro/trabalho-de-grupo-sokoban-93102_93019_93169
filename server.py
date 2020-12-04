@@ -57,7 +57,7 @@ class GameServer:
         )
 
         self._highscores.append((self.current_player.name, reduce_score(*score),))
-        self._highscores = sorted(self._highscores, key=lambda s: s[1])[:MAX_HIGHSCORES]
+        self._highscores =sorted(self._highscores, key=lambda s: s[1])[:MAX_HIGHSCORES]
 
         with open(HIGHSCORE_FILE, "w") as outfile:
             json.dump(self._highscores, outfile)
@@ -159,7 +159,6 @@ class GameServer:
 
                 if self.current_player:
                     await self.current_player.ws.close()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -1,6 +1,7 @@
 from utils import *
 from copy import deepcopy
 import asyncio
+import time
 
 class Node:
     def __init__(self,boxes,parent,move,keeper, heuristic):
@@ -22,7 +23,6 @@ class SokobanTree:
         self.used_states = []
         self.KeeperTree = None
 
-    
     """ 
         Quando passa de nível atribui um novo estado à SokobanTree e reseta os nodes
     """
@@ -34,7 +34,7 @@ class SokobanTree:
         self.root = Node(self.init_boxes, None, "", self.Util.filter_tiles([Tiles.MAN, Tiles.MAN_ON_GOAL])[0], 0)
         self.open_nodes = [self.root]
         self.KeeperTree = KeeperTree(self.Util)
-        self.used_states = []
+        self.used_states = set([])
         
     def get_path(self, node):
         if node.parent == None:
@@ -46,9 +46,7 @@ class SokobanTree:
     async def search(self):
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
-            
-
-            self.used_states.append((set(node.boxes), node.keeper))
+            self.used_states.add((frozenset(node.boxes), node.keeper))
             
             if self.Util.completed(node.boxes, self.goal_boxes):
                 self.path_solution = node.move
@@ -87,7 +85,7 @@ class SokobanTree:
                         new_boxes[box_num] = action
                         
                         newnode = Node(new_boxes, node, node.move + keeper_moves + push, curr_box_pos, self.Util.heuristic_boxes(new_boxes))
-                        if (set(newnode.boxes), newnode.keeper) not in self.used_states:
+                        if (frozenset(newnode.boxes), newnode.keeper) not in self.used_states:
                             lnewnodes.append(newnode)
             self.add_to_open(lnewnodes)
         return None
@@ -111,10 +109,10 @@ class KeeperTree:
 
     def get_path(self, node):
         if node.parent == None:
-            return [node.keeper_pos]
+            return set(node.keeper_pos)
         path = self.get_path(node.parent)
-        path += [node.keeper_pos]
-        return path
+        path.add(node.keeper_pos)
+        return set(path)
     
     async def search_keeper(self, target_pos, keeper_pos):
         self.keeper_nodes = [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
