@@ -3,20 +3,22 @@ from consts import Tiles, TILES
 import math
 import asyncio
 import time
+from queue import Queue
+
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
         self.map_state = map_state
         self.curr_boxes = init_boxes
         self.move = None
         self.goals = set(self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])) if map_state is not None else None
-        self.dark_list = self.init_darklist() if self.goals is not None else None #init
+        self.dark_list, self.distanceToGoal = self.init_darklist() if self.goals is not None else (None,None) #init
         self.box = None
 
     def init_darklist(self):
         horz_tiles, vert_tiles = len(self.map_state[0]), len(self.map_state)
 
         visited = [[0] * vert_tiles for _ in range(horz_tiles)]
-        
+        distanceToGoal={goal:[[1000] * vert_tiles for _ in range(horz_tiles)] for goal in self.goals}
 
         def check_not_blocked(pos):
             x, y = pos
@@ -35,22 +37,66 @@ class Util:
                 check_not_blocked((x - 1, y))
             return
 
+        def distanceG(goal):
+            distanceToGoal[goal][goal[0]][goal[1]]=0
+            open_goals = Queue()
+            open_goals.put(goal)
+            while not open_goals.empty():
+                x,y= open_goals.get()
+
+                if distanceToGoal[goal][x][y+1] == 1000 and not (self.get_tile((x, y +1)) == Tiles.WALL) and not (self.get_tile((x, y +2)) == Tiles.WALL):
+                    distanceToGoal[goal][x][y+1]=distanceToGoal[goal][x][y]+1
+                    open_goals.put((x,y+1))
+
+                if distanceToGoal[goal][x][y-1] == 1000 and not (self.get_tile((x, y - 1)) == Tiles.WALL) and not (self.get_tile((x, y -2)) == Tiles.WALL):
+                    distanceToGoal[goal][x][y-1]=distanceToGoal[goal][x][y]+1
+                    open_goals.put((x,y-1))
+
+                if distanceToGoal[goal][x+1][y] == 1000 and not (self.get_tile((x + 1, y )) == Tiles.WALL) and not (self.get_tile((x + 2, y)) == Tiles.WALL):
+                    distanceToGoal[goal][x+1][y]=distanceToGoal[goal][x][y]+1
+                    open_goals.put((x + 1,y))
+
+                if distanceToGoal[goal][x-1][y] == 1000 and not (self.get_tile((x - 1, y )) == Tiles.WALL) and not (self.get_tile((x - 2, y)) == Tiles.WALL):
+                    distanceToGoal[goal][x-1][y]=distanceToGoal[goal][x][y]+1
+                    open_goals.put((x - 1,y))
+
         [check_not_blocked((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
+        [distanceG((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
+        
 
-        return visited
-
+        return visited, distanceToGoal
 
     def heuristic_boxes(self, box):
-        calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
+        calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.distanceToGoal[tpl[1]][tpl[0][0]][tpl[0][1]], reverse=True)
         matchedBoxes=set()
         matchedGoals=set()
+        pQueue = Queue()
         heur=0
-        for b, goal in calc_costs:
-            if not b in matchedBoxes and not goal in matchedGoals:
-                heur+=self.heuristic(b,goal)
+        while calc_costs:
+            b,goal = calc_costs.pop()
+            if not b  in matchedBoxes and not goal  in matchedGoals:
+                h= self.distanceToGoal[goal][b[0]][b[1]]
+                if h!=1000:
+                    heur+=self.heuristic(b,goal)
+                    matchedBoxes.add(b)
+                    matchedGoals.add(goal)
+        for b in box:
+            if not b in matchedBoxes:
+                heur+=min([self.distanceToGoal[goal][b[0]][b[1]] for goal in self.goals])
                 matchedBoxes.add(b)
-                matchedGoals.add(goal)
         return heur
+
+    # def heuristic_boxes(self, box):
+    #     calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
+    #     matchedBoxes=set()
+    #     matchedGoals=set()
+    #     heur=0
+    #     for b, goal in calc_costs:
+    #         if not b in matchedBoxes and not goal in matchedGoals:
+    #             heur+=self.heuristic(b,goal)
+    #             matchedBoxes.add(b)
+    #             matchedGoals.add(goal)
+    #     return heur
 
     def heuristic(self, pos1, pos2):
         return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
@@ -98,10 +144,9 @@ class Util:
         await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
         self.curr_boxes = curr_boxes
         possible_actions = []
-        i = 0
+
         for box in curr_boxes:
-            possible_actions.append((i, self.possible_moves(box)))
-            i += 1
+            possible_actions.append((box, self.possible_moves(box)))
 
         return possible_actions
 
