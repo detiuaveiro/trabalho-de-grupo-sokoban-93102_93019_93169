@@ -2,7 +2,7 @@ from mapa import Map
 from consts import Tiles, TILES
 import math
 import asyncio
-
+import time
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
         self.map_state = map_state
@@ -55,11 +55,11 @@ class Util:
     def heuristic(self, pos1, pos2):
         return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
 
-    def completed(self, curr_boxes, goal_boxes):
+    def completed(self, curr_boxes):
         """
             Given the goal boxes and the current boxes, checks if they match
         """
-        return all(box in goal_boxes for box in curr_boxes)
+        return all(box in self.goals for box in curr_boxes)
 
     async def possible_keeper_actions(self, keeper_pos):
         await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED

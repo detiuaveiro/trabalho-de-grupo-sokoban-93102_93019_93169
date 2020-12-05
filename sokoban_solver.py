@@ -27,6 +27,7 @@ class SokobanTree:
         Quando passa de nível atribui um novo estado à SokobanTree e reseta os nodes
     """
     def update_level (self, new_map_state, new_init_boxes, new_goal_boxes):
+    
         self.map_state = new_map_state
         self.init_boxes = new_init_boxes
         self.Util = Util(self.map_state, self.init_boxes)
@@ -35,6 +36,7 @@ class SokobanTree:
         self.open_nodes = [self.root]
         self.KeeperTree = KeeperTree(self.Util)
         self.used_states = {hash(frozenset(self.init_boxes)) : [self.root.keeper]}
+       
         
     async def search(self):
         start_time = time.time()
@@ -42,7 +44,7 @@ class SokobanTree:
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
             
-            if self.Util.completed(node.boxes, self.goal_boxes):
+            if self.Util.completed(node.boxes):
                 # your code
                 elapsed_time = time.time() - start_time
                 print(elapsed_time)
@@ -86,18 +88,18 @@ class SokobanTree:
                             self.used_states[h] = [newnode.keeper]
                             lnewnodes.append(newnode)
                         else:
-                            if not node.keeper in self.used_states[h]:
-                                self.used_states[h] += [newnode.keeper]
-                                lnewnodes.append(newnode)
-
-                            # x = False
-                            # for pos in self.used_states[h]:
-                            #     if await self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
-                            #         x = True
-                            #         break
-                            # if not x:
+                            # if not node.keeper in self.used_states[h]:
                             #     self.used_states[h] += [newnode.keeper]
                             #     lnewnodes.append(newnode)
+
+                            x = False
+                            for pos in self.used_states[h]:
+                                if await self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
+                                    x = True
+                                    break
+                            if not x:
+                                self.used_states[h] += [newnode.keeper]
+                                lnewnodes.append(newnode)
 
             self.add_to_open(lnewnodes)
         return None
