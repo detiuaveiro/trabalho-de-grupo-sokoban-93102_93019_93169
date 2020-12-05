@@ -8,7 +8,7 @@ import websockets
 from mapa import Map
 from sokoban_solver import SokobanTree
 from consts import *
-
+import time
 # ####Importar a search
 
 SokobanTree = SokobanTree ()
@@ -18,10 +18,16 @@ async def solver(puzzle, solution):
         game_properties = await puzzle.get()
         mapa = Map(game_properties["map"])
         print(mapa)
+        
+        start_time = time.time()
 
         SokobanTree.update_level(mapa._map, mapa.filter_tiles([Tiles.BOX, Tiles.BOX_ON_GOAL]), mapa.filter_tiles([Tiles.GOAL, Tiles.BOX_ON_GOAL, Tiles.MAN_ON_GOAL]))
-
+        
         keys = await SokobanTree.search()
+
+        # your code
+        elapsed_time = time.time() - start_time
+        print("elap ", elapsed_time)
         print(">>", keys)
 
         await solution.put(keys)
