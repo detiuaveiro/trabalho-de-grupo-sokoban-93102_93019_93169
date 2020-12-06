@@ -9,7 +9,7 @@ class Util:
     def __init__ (self, map_state=None, init_boxes=None):
         self.map_state = map_state
         self.curr_boxes = init_boxes
-        self.move = None
+        self.deadends={}
         self.goals = set(self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])) if map_state is not None else None
         self.dark_list, self.distanceToGoal = self.init_darklist() if self.goals is not None else (None,None) #init
         self.box = None
@@ -118,19 +118,18 @@ class Util:
         down = (x, y + 1)
 
         # Left
-        self.move = "left"
         if not self.is_blocked(left):
             possible_moves.append((left, "a"))
+
         # Right
-        self.move = "right"
         if not self.is_blocked(right):
             possible_moves.append((right, "d"))
+
         # Up
-        self.move = "up"
         if not self.is_blocked(up):
             possible_moves.append((up, "w"))
+
         # Down
-        self.move = "down"
         if not self.is_blocked(down):
             possible_moves.append((down, "s"))
 
@@ -144,13 +143,15 @@ class Util:
         await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
         self.curr_boxes = curr_boxes
         possible_actions = []
-
+        i=0
         for box in curr_boxes:
-            possible_actions.append((box, self.possible_moves(box)))
-
+            a=self.possible_moves(box,i)
+            if a:
+                possible_actions.append((i,a))
+            i+=1
         return possible_actions
 
-    def possible_moves(self, box):
+    def possible_moves(self, box,i):
         self.box = box
         possible_moves = set()
 
@@ -159,22 +160,39 @@ class Util:
         right = (x + 1, y)
         up = (x, y - 1)
         down = (x, y + 1)
+
         # Left
-        self.move = "left"
-        if self.dark_list[x-1][y] and not left in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
-            possible_moves.add(left)
+        l= hash(self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:])
+        if not l in self.deadends:
+            if self.dark_list[x-1][y] and not left in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
+                possible_moves.add(left)
+            else:
+                self.deadends[l]=1
+
         # Right
-        self.move = "right"
-        if self.dark_list[x+1][y] and not right in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
-            possible_moves.add(right)
+        r= hash(self.curr_boxes[:i] + (right,) + self.curr_boxes[i+1:])
+        if not r in self.deadends:
+            if self.dark_list[x+1][y] and not right in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
+                possible_moves.add(right)
+            else:
+                self.deadends[r]=1
+                
         # Up
-        self.move = "up"
-        if self.dark_list[x][y-1] and not up in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
-            possible_moves.add(up)
+        u= hash(self.curr_boxes[:i] + (up,) + self.curr_boxes[i+1:])
+        if not u in self.deadends:
+            if self.dark_list[x][y-1] and not up in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
+                possible_moves.add(up)
+            else:
+                self.deadends[u]=1
+
         # Down
-        self.move = "down"
-        if self.dark_list[x][y+1] and not down in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
-            possible_moves.add(down)
+        d= hash(self.curr_boxes[:i] + (down,) + self.curr_boxes[i+1:]) 
+        if not d in self.deadends:
+            if self.dark_list[x][y+1] and not down in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
+                possible_moves.add(down)
+            else:
+                self.deadends[d]=1
+
         return possible_moves
 
     # def is_dead_end(self, pos):
