@@ -5,6 +5,8 @@ import asyncio
 import time
 from queue import Queue
 
+#https://www.youtube.com/watch?v=cQ5MsiGaDY8
+
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
         self.map_state = map_state
@@ -62,7 +64,6 @@ class Util:
 
         [check_not_blocked((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
         [distanceG((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
-        
 
         return visited, distanceToGoal
 
@@ -147,7 +148,7 @@ class Util:
         for box in curr_boxes:
             a=self.possible_moves(box,i)
             if a:
-                possible_actions.append((i,a))
+                possible_actions.append((box,a))
             i+=1
         return possible_actions
 
@@ -162,34 +163,38 @@ class Util:
         down = (x, y + 1)
 
         # Left
-        l= hash(self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:])
-        if not l in self.deadends:
-            if self.dark_list[x-1][y] and not left in self.curr_boxes and not self.is_blocked(right) and not self.freeze_deadlock(left,set()):
-                possible_moves.add(left)
+        li= self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:]
+        l=hash(li)
+        if not l in self.deadends and not left in self.curr_boxes and not self.is_blocked(right):
+            if self.dark_list[x-1][y]  and not self.freeze_deadlock(left,set()):
+                possible_moves.add((li,left))
             else:
                 self.deadends[l]=1
 
         # Right
-        r= hash(self.curr_boxes[:i] + (right,) + self.curr_boxes[i+1:])
-        if not r in self.deadends:
-            if self.dark_list[x+1][y] and not right in self.curr_boxes and not self.is_blocked(left) and not self.freeze_deadlock(right,set()):
-                possible_moves.add(right)
+        ri= self.curr_boxes[:i] + (right,) + self.curr_boxes[i+1:]
+        r=hash(ri)
+        if not r in self.deadends and not right in self.curr_boxes and not self.is_blocked(left):
+            if self.dark_list[x+1][y]  and not self.freeze_deadlock(right,set()):
+                possible_moves.add((ri,right))
             else:
                 self.deadends[r]=1
-                
+
         # Up
-        u= hash(self.curr_boxes[:i] + (up,) + self.curr_boxes[i+1:])
-        if not u in self.deadends:
-            if self.dark_list[x][y-1] and not up in self.curr_boxes and not self.is_blocked(down) and not self.freeze_deadlock(up,set()):
-                possible_moves.add(up)
+        ui= self.curr_boxes[:i] + (up,) + self.curr_boxes[i+1:]
+        u= hash(ui)
+        if not u in self.deadends and not up in self.curr_boxes and not self.is_blocked(down) :
+            if self.dark_list[x][y-1] and  not self.freeze_deadlock(up,set()):
+                possible_moves.add((ui,up))
             else:
                 self.deadends[u]=1
 
         # Down
-        d= hash(self.curr_boxes[:i] + (down,) + self.curr_boxes[i+1:]) 
-        if not d in self.deadends:
-            if self.dark_list[x][y+1] and not down in self.curr_boxes and not self.is_blocked(up) and not self.freeze_deadlock(down,set()):
-                possible_moves.add(down)
+        di=self.curr_boxes[:i] + (down,) + self.curr_boxes[i+1:]
+        d= hash(di) 
+        if not d in self.deadends and not down in self.curr_boxes and not self.is_blocked(up):
+            if self.dark_list[x][y+1]  and not self.freeze_deadlock(down,set()):
+                possible_moves.add((di,down))
             else:
                 self.deadends[d]=1
 

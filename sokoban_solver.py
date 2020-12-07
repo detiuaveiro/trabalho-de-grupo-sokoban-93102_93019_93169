@@ -59,20 +59,16 @@ class SokobanTree:
 
             lnewnodes = []
     
-            for box_num, box in await self.Util.possible_actions(node.boxes):
+            for cbox, box in await self.Util.possible_actions(node.boxes):
                 await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
-                print(box_num,box, node.boxes)
-                for action in box:
-                    
-                    curr_box_pos = node.boxes[box_num]
-                    print(curr_box_pos)
-                    x, y = curr_box_pos
+                for nboxes, action in box:
+                    x, y = cbox
                     left = (- 1, 0)
                     right = (1, 0)
                     up = (0, - 1)
                     down = (0, 1)   
                     
-                    sub = (action[0] - curr_box_pos[0], action[1] - curr_box_pos[1])
+                    sub = (action[0] - cbox[0], action[1] - cbox[1])
 
                     if sub==left:
                         push = "a"
@@ -83,15 +79,14 @@ class SokobanTree:
                     else:
                         push = "s"  
                     # 2*pos atual da caixa - posição para onde vai
-                    keeper_target = (curr_box_pos[0]*2 - action[0], curr_box_pos[1]*2 - action[1])
-                    print(keeper_target, node.keeper)
+                    keeper_target = (cbox[0]*2 - action[0], cbox[1]*2 - action[1])
                     keeper_moves = await self.KeeperTree.search_keeper(keeper_target, node.keeper)
-                    print(keeper_moves)
+
                     #print(" ACTION: {} ; BOX POSITION: {}; Keeper_Moves {}".format(action, curr_box_pos,keeper_moves))
                     if keeper_moves is not None:
-                        new_boxes = node.boxes[:box_num] + (action,) + node.boxes[box_num+1:]
-                        newnode = Node(new_boxes, node, f"{node.move}{keeper_moves}{push}", curr_box_pos, self.Util.heuristic_boxes(new_boxes))
-                        h = hash(newnode.boxes)
+
+                        newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
+                        h = hash(nboxes)
 
                         if not h in self.used_states:
                             self.used_states[h] = [newnode.keeper]
