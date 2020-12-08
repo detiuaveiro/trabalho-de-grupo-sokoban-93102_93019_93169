@@ -99,9 +99,9 @@ class SokobanTree:
                                     x = True
                                     break
                             if not x:
-                                self.used_states[h] += [newnode.keeper]
                                 heapq.heappush(self.open_nodes, (newnode.heuristic, self.count, newnode))
                                 self.count +=1
+                            self.used_states[h].append(newnode.keeper)
 
             #self.add_to_open(lnewnodes)
         return None
@@ -135,7 +135,7 @@ class KeeperTree:
             self.keeper_nodes= [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
         else:
             self.keeper_nodes = deque()
-            self.keeper_nodes.append(KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos)))
+            self.keeper_nodes.append(KeeperNode(None, keeper_pos, "", 0))
 
         while self.keeper_nodes:
             await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
@@ -148,11 +148,12 @@ class KeeperTree:
             lnewnodes = []
 
             for action, key in await self.Util.possible_keeper_actions(node.keeper_pos):
-                newnode = KeeperNode(node, action, f"{node.move}{key}", node.heuristic + self.Util.heuristic(action, target_pos))
-                if not self.get_path(node,newnode.keeper_pos):
+                if not self.get_path(node,action):
                     if strat:
+                        newnode = KeeperNode(node, action, f"{node.move}{key}", len(node.move)+ self.Util.heuristic(action, target_pos))
                         lnewnodes.append(newnode)    
                     else:
+                        newnode = KeeperNode(node, action, f"{node.move}{key}", 0)
                         self.keeper_nodes.append(newnode)
             if strat:
                 self.add_to_open(lnewnodes)

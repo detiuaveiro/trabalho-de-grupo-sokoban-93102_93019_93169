@@ -14,7 +14,22 @@ class Util:
         self.deadends={}
         self.goals = set(self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])) if map_state is not None else None
         self.dark_list, self.distanceToGoal = self.init_darklist() if self.goals is not None else (None,None) #init
+        #self.box_assignment= self.hungarian_heuristic()
         self.box = None
+
+    # def hungarian_heuristic(self):
+    #     gls=self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])
+    #     matrix= [[self.distanceToGoal[g][b[0]][b[1]] for g in self.goals] for b in self.curr_boxes]
+    #     print(matrix)
+
+    #     #Step 1 Subtract row mins from each row.
+    #     matrix=[[matrix[x][y] - min(matrix[x])for y in range(len(matrix)) ] for x in range(len(matrix)) ]
+    #     print(matrix)
+
+    #     #Step 2 Subtract column mins from each column
+    #     matrix=[[matrix[x][y] - min([matrix[c][y] for c in range(len(matrix))]) for y in range(len(matrix))] for x in range(len(matrix)) ]
+    #     return [gls[i] for i in range(len(gls)-1,-1,-1) ]
+
 
     def init_darklist(self):
         horz_tiles, vert_tiles = len(self.map_state[0]), len(self.map_state)
@@ -66,6 +81,12 @@ class Util:
         [distanceG((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
 
         return visited, distanceToGoal
+
+    # def heuristic_boxes(self,box):
+    #     #print(box)
+    #     #print(self.box_assignment)
+    #     #print(sum([self.distanceToGoal[self.box_assignment[x]][box[x][0]][box[x][1]] for x in range(len(self.box_assignment))] ))
+    #     return sum([self.distanceToGoal[self.box_assignment[x]][box[x][0]][box[x][1]] for x in range(len(self.box_assignment))] )
 
     def heuristic_boxes(self, box):
         calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.distanceToGoal[tpl[1]][tpl[0][0]][tpl[0][1]], reverse=True)
@@ -163,40 +184,44 @@ class Util:
         down = (x, y + 1)
 
         # Left
-        li= self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:]
-        l=hash(li)
-        if not l in self.deadends and not left in self.curr_boxes and not self.is_blocked(right):
-            if self.dark_list[x-1][y]  and not self.freeze_deadlock(left,set()):
-                possible_moves.add((li,left))
-            else:
-                self.deadends[l]=1
+        if self.dark_list[x-1][y]:
+            li= self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:]
+            l=hash(li)
+            if not l in self.deadends and not left in self.curr_boxes and not self.is_blocked(right):
+                if not self.freeze_deadlock(left,set()):
+                    possible_moves.add((li,left))
+                else:
+                    self.deadends[l]=1
 
         # Right
-        ri= self.curr_boxes[:i] + (right,) + self.curr_boxes[i+1:]
-        r=hash(ri)
-        if not r in self.deadends and not right in self.curr_boxes and not self.is_blocked(left):
-            if self.dark_list[x+1][y]  and not self.freeze_deadlock(right,set()):
-                possible_moves.add((ri,right))
-            else:
-                self.deadends[r]=1
+        if self.dark_list[x+1][y]:
+            ri= self.curr_boxes[:i] + (right,) + self.curr_boxes[i+1:]
+            r=hash(ri)
+            if not r in self.deadends and not right in self.curr_boxes and not self.is_blocked(left):
+                if not self.freeze_deadlock(right,set()):
+                    possible_moves.add((ri,right))
+                else:
+                    self.deadends[r]=1
 
         # Up
-        ui= self.curr_boxes[:i] + (up,) + self.curr_boxes[i+1:]
-        u= hash(ui)
-        if not u in self.deadends and not up in self.curr_boxes and not self.is_blocked(down) :
-            if self.dark_list[x][y-1] and  not self.freeze_deadlock(up,set()):
-                possible_moves.add((ui,up))
-            else:
-                self.deadends[u]=1
+        if self.dark_list[x][y-1]:
+            ui= self.curr_boxes[:i] + (up,) + self.curr_boxes[i+1:]
+            u= hash(ui)
+            if not u in self.deadends and not up in self.curr_boxes and not self.is_blocked(down) :
+                if  not self.freeze_deadlock(up,set()):
+                    possible_moves.add((ui,up))
+                else:
+                    self.deadends[u]=1
 
         # Down
-        di=self.curr_boxes[:i] + (down,) + self.curr_boxes[i+1:]
-        d= hash(di) 
-        if not d in self.deadends and not down in self.curr_boxes and not self.is_blocked(up):
-            if self.dark_list[x][y+1]  and not self.freeze_deadlock(down,set()):
-                possible_moves.add((di,down))
-            else:
-                self.deadends[d]=1
+        if self.dark_list[x][y+1]:
+            di=self.curr_boxes[:i] + (down,) + self.curr_boxes[i+1:]
+            d= hash(di) 
+            if not d in self.deadends and not down in self.curr_boxes and not self.is_blocked(up):
+                if not self.freeze_deadlock(down,set()):
+                    possible_moves.add((di,down))
+                else:
+                    self.deadends[d]=1
 
         return possible_moves
 
