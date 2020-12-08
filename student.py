@@ -17,14 +17,14 @@ async def solver(puzzle, solution):
     while True:
         game_properties = await puzzle.get()
         mapa = Map(game_properties["map"])
-        print(mapa)
+        # print(mapa)
 
         SokobanTree.update_level(mapa._map, mapa.filter_tiles([Tiles.BOX, Tiles.BOX_ON_GOAL]), mapa.filter_tiles([Tiles.GOAL, Tiles.BOX_ON_GOAL, Tiles.MAN_ON_GOAL]))
         
         keys = await SokobanTree.search()
 
         # your code
-        print(">>", keys)
+        # print(">>", keys)
 
         await solution.put(keys)
 

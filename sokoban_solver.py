@@ -5,9 +5,10 @@ import time
 import heapq
 from collections import deque
 import time
-
+import numpy as np
 
 class Node:
+    __slots__ = ['boxes', 'parent', 'move', 'keeper', 'heuristic']
     def __init__(self,boxes,parent,move,keeper, heuristic):
         self.boxes = boxes # mapa actual state
         self.parent = parent
@@ -48,13 +49,16 @@ class SokobanTree:
         
     async def search(self):
         start = time.time()
+        count = 0
         while self.open_nodes:
 
             node =  heapq.heappop(self.open_nodes)[2]
+            count += 1 
 
             if self.Util.completed(node.boxes):
                 end = time.time()
                 print(end - start)
+                print(count)
                 return node.move
 
             lnewnodes = []
@@ -99,18 +103,14 @@ class SokobanTree:
                                     x = True
                                     break
                             if not x:
-                                self.used_states[h] += [newnode.keeper]
+                                self.used_states[h].append(newnode.keeper)
                                 heapq.heappush(self.open_nodes, (newnode.heuristic, self.count, newnode))
                                 self.count +=1
-
-            #self.add_to_open(lnewnodes)
+                            self.used_states[h].append(newnode.keeper)
         return None
 
-    # def add_to_open(self,lnewnodes):
-    #     self.open_nodes[:0] = lnewnodes
-    #     self.open_nodes.sort(key=lambda node : node.heuristic)
-
 class KeeperNode:
+    __slots__ = ['parent', 'keeper_pos', 'move', 'heuristic']
     def __init__(self, parent, keeper_pos, move, heuristic=None):
         self.parent = parent
         self.keeper_pos = keeper_pos
@@ -148,11 +148,13 @@ class KeeperTree:
             lnewnodes = []
 
             for action, key in await self.Util.possible_keeper_actions(node.keeper_pos):
-                newnode = KeeperNode(node, action, f"{node.move}{key}", node.heuristic + self.Util.heuristic(action, target_pos))
-                if not self.get_path(node,newnode.keeper_pos):
+                if not self.get_path(node,action):
                     if strat:
+                        # len(node.moves) == custo (#keys)
+                        newnode = KeeperNode(node, action, f"{node.move}{key}", len(node.move) + self.Util.heuristic(action, target_pos))
                         lnewnodes.append(newnode)    
                     else:
+                        newnode = KeeperNode(node, action, f"{node.move}{key}", 0)
                         self.keeper_nodes.append(newnode)
             if strat:
                 self.add_to_open(lnewnodes)

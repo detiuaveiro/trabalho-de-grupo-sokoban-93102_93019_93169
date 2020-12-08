@@ -4,16 +4,19 @@ import math
 import asyncio
 import time
 from queue import Queue
+import numpy as np
 
 #https://www.youtube.com/watch?v=cQ5MsiGaDY8
 
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
+        dt = np.dtype(np.int16, np.int16)
         self.map_state = map_state
         self.curr_boxes = init_boxes
         self.deadends={}
         self.goals = set(self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])) if map_state is not None else None
         self.dark_list, self.distanceToGoal = self.init_darklist() if self.goals is not None else (None,None) #init
+        self.dark_list = np.array(self.dark_list, dtype=dt)
         self.box = None
 
     def init_darklist(self):
@@ -40,6 +43,9 @@ class Util:
             return
 
         def distanceG(goal):
+            """
+                Caixa mais distante -> heuristica maior
+            """
             distanceToGoal[goal][goal[0]][goal[1]]=0
             open_goals = Queue()
             open_goals.put(goal)
