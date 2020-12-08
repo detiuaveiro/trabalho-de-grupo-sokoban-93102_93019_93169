@@ -5,9 +5,10 @@ import time
 import heapq
 from collections import deque
 import time
-
+import numpy as np
 
 class Node:
+    __slots__ = ['boxes', 'parent', 'move', 'keeper', 'heuristic']
     def __init__(self,boxes,parent,move,keeper, heuristic):
         self.boxes = boxes # mapa actual state
         self.parent = parent
@@ -48,13 +49,16 @@ class SokobanTree:
         
     async def search(self):
         start = time.time()
+        count = 0
         while self.open_nodes:
 
             node =  heapq.heappop(self.open_nodes)[2]
+            count += 1 
 
             if self.Util.completed(node.boxes):
                 end = time.time()
                 print(end - start)
+                print(count)
                 return node.move
 
             lnewnodes = []
@@ -106,11 +110,8 @@ class SokobanTree:
             #self.add_to_open(lnewnodes)
         return None
 
-    # def add_to_open(self,lnewnodes):
-    #     self.open_nodes[:0] = lnewnodes
-    #     self.open_nodes.sort(key=lambda node : node.heuristic)
-
 class KeeperNode:
+    __slots__ = ['parent', 'keeper_pos', 'move', 'heuristic']
     def __init__(self, parent, keeper_pos, move, heuristic=None):
         self.parent = parent
         self.keeper_pos = keeper_pos
