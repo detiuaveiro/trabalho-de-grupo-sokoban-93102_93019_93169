@@ -43,28 +43,24 @@ class SokobanTree:
         self.count=0
         heapq.heappush(self.open_nodes, (0, self.count, self.root))
         self.KeeperTree = KeeperTree(self.Util)
-        self.used_states = {hash(self.init_boxes) : [self.root.keeper]}
+        self.used_states = {hash(self.init_boxes) : {self.root.keeper}}
         end = time.time()
         print(end - start)
         
     async def search(self):
         start = time.time()
-        count = 0
         while self.open_nodes:
 
             node =  heapq.heappop(self.open_nodes)[2]
-            count += 1 
 
             if self.Util.completed(node.boxes):
                 end = time.time()
                 print(end - start)
-                print(count)
                 return node.move
 
             lnewnodes = []
     
-            for cbox, box in await self.Util.possible_actions(node.boxes):
-                await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
+            for cbox, box in self.Util.possible_actions(node.boxes):
                 for nboxes, action in box:
                     x, y = cbox
                     left = (- 1, 0)
@@ -84,8 +80,8 @@ class SokobanTree:
                         push = "s"  
                     # 2*pos atual da caixa - posição para onde vai
                     keeper_target = (cbox[0]*2 - action[0], cbox[1]*2 - action[1])
-                    keeper_moves = await self.KeeperTree.search_keeper(keeper_target, node.keeper)
-
+                    keeper_moves =  self.KeeperTree.search_keeper(keeper_target, node.keeper)
+                    await asyncio.sleep(0) 
                     #print(" ACTION: {} ; BOX POSITION: {}; Keeper_Moves {}".format(action, curr_box_pos,keeper_moves))
                     if keeper_moves is not None:
 
@@ -93,19 +89,19 @@ class SokobanTree:
                         h = hash(nboxes)
 
                         if not h in self.used_states:
-                            self.used_states[h] = [newnode.keeper]
+                            self.used_states[h] = {newnode.keeper}
                             heapq.heappush(self.open_nodes, (newnode.heuristic, self.count,newnode))
                             self.count +=1
                         else:
                             x = False
                             for pos in self.used_states[h]:
-                                if await self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
+                                if self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
                                     x = True
                                     break
                             if not x:
                                 heapq.heappush(self.open_nodes, (newnode.heuristic, self.count, newnode))
                                 self.count +=1
-                            self.used_states[h].append(newnode.keeper)
+                            self.used_states[h].add(newnode.keeper)
 
             #self.add_to_open(lnewnodes)
         return None
@@ -131,7 +127,7 @@ class KeeperTree:
         return self.get_path(node.parent,pos)
 
     
-    async def search_keeper(self, target_pos, keeper_pos, strat=1):
+    def search_keeper(self, target_pos, keeper_pos, strat=1):
         if strat:
             self.keeper_nodes= [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
         else:
@@ -139,7 +135,6 @@ class KeeperTree:
             self.keeper_nodes.append(KeeperNode(None, keeper_pos, "", 0))
 
         while self.keeper_nodes:
-            await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
 
             node = self.keeper_nodes.pop()
 
@@ -148,7 +143,7 @@ class KeeperTree:
 
             lnewnodes = []
 
-            for action, key in await self.Util.possible_keeper_actions(node.keeper_pos):
+            for action, key in  self.Util.possible_keeper_actions(node.keeper_pos):
                 if not self.get_path(node,action):
                     if strat:
                         newnode = KeeperNode(node, action, f"{node.move}{key}", len(node.move)+ self.Util.heuristic(action, target_pos))

@@ -134,8 +134,7 @@ class Util:
         """
         return all(box in self.goals for box in curr_boxes)
 
-    async def possible_keeper_actions(self, keeper_pos):
-        await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
+    def possible_keeper_actions(self, keeper_pos):
         possible_moves = []
 
         x, y = keeper_pos
@@ -162,12 +161,11 @@ class Util:
 
         return possible_moves
 
-    async def possible_actions(self, curr_boxes):
+    def possible_actions(self, curr_boxes):
         """
             Possible actions vai ser a lista de ações possiveis de todas as caixas
             Devolve uma lista de ações possiveis
         """
-        await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
         self.curr_boxes = curr_boxes
         possible_actions = []
         i=0
@@ -189,40 +187,40 @@ class Util:
         down = (x, y + 1)
 
         # Left
-        if self.dark_list[x-1][y]:
+        if self.dark_list[x-1][y] and not left in self.curr_boxes and not self.is_blocked(right):
             li= self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:]
             l=hash(li)
-            if not l in self.deadends and not left in self.curr_boxes and not self.is_blocked(right):
+            if not l in self.deadends :
                 if not self.freeze_deadlock(left,set()):
                     possible_moves.add((li,left))
                 else:
                     self.deadends[l]=1
 
         # Right
-        if self.dark_list[x+1][y]:
+        if self.dark_list[x+1][y] and not right in self.curr_boxes and not self.is_blocked(left):
             ri= self.curr_boxes[:i] + (right,) + self.curr_boxes[i+1:]
             r=hash(ri)
-            if not r in self.deadends and not right in self.curr_boxes and not self.is_blocked(left):
+            if not r in self.deadends:
                 if not self.freeze_deadlock(right,set()):
                     possible_moves.add((ri,right))
                 else:
                     self.deadends[r]=1
 
         # Up
-        if self.dark_list[x][y-1]:
+        if self.dark_list[x][y-1] and not up in self.curr_boxes and not self.is_blocked(down) :
             ui= self.curr_boxes[:i] + (up,) + self.curr_boxes[i+1:]
             u= hash(ui)
-            if not u in self.deadends and not up in self.curr_boxes and not self.is_blocked(down) :
+            if not u in self.deadends:
                 if  not self.freeze_deadlock(up,set()):
                     possible_moves.add((ui,up))
                 else:
                     self.deadends[u]=1
 
         # Down
-        if self.dark_list[x][y+1]:
+        if self.dark_list[x][y+1] and not down in self.curr_boxes and not self.is_blocked(up):
             di=self.curr_boxes[:i] + (down,) + self.curr_boxes[i+1:]
             d= hash(di) 
-            if not d in self.deadends and not down in self.curr_boxes and not self.is_blocked(up):
+            if not d in self.deadends :
                 if not self.freeze_deadlock(down,set()):
                     possible_moves.add((di,down))
                 else:
@@ -288,46 +286,6 @@ class Util:
 
         if all(box in self.goals for box in boxes_checked):
             return False
-        return vertical_block and horizontal_block
-
-        
-    def is_trapped(self, pos, no_check=[]):
-        """
-            Verifica se a pos esta encurralada
-        """
-        #print(pos)
-        no_check.append(pos)
-        # Verificar se e um GOAL
-        if pos in self.goals:
-            return False
-        
-        # Verificar se existe uma WALL a esqueda ou direita da caixa - bloqueio horizontal
-        left = (pos[0]-1, pos[1])
-        right = (pos[0]+1, pos[1])
-        horizontal_block = False
-        if self.get_tile(left) == Tiles.WALL or self.get_tile(right) == Tiles.WALL:
-            #print("HORIZONTAL BLOCK")
-            horizontal_block = True
-
-        # Verificar se existe uma WALL acima ou embaixo da caixa - bloqueio vertical
-        up = (pos[0], pos[1]-1)
-        down = (pos[0], pos[1]+1)
-        vertical_block = False
-        if self.get_tile(up) == Tiles.WALL or self.get_tile(down) == Tiles.WALL:
-            #print("VERTICAL BLOCK")
-            vertical_block = True
-
-        # Verificar se esta na darklist
-        if not horizontal_block and left in self.dark_list and right in self.dark_list:
-            #print("HORIZONTAL BLOCK DARKLIST")
-            horizontal_block = True
-        if not vertical_block and up in self.dark_list and down in self.dark_list:
-            #print("VERTICAL BLOCK DARKLIST")
-            vertical_block = True
-
-        if vertical_block and horizontal_block:
-            print(pos)
-
         return vertical_block and horizontal_block
 
     def get_tile(self, pos):      
