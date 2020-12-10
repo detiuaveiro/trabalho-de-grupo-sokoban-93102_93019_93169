@@ -93,12 +93,12 @@ class SokobanTree:
                             heapq.heappush(self.open_nodes, (newnode.heuristic, self.count,newnode))
                             self.count +=1
                         else:
-                            x = False
+                            x = 1
                             for pos in self.used_states[h]:
                                 if self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
-                                    x = True
+                                    x = 0
                                     break
-                            if not x:
+                            if x:
                                 heapq.heappush(self.open_nodes, (newnode.heuristic, self.count, newnode))
                                 self.count +=1
                             self.used_states[h].add(newnode.keeper)
