@@ -5,7 +5,7 @@ import time
 import heapq
 from collections import deque
 import time
-import numpy as np
+
 
 class Node:
     __slots__ = ['boxes', 'parent', 'move', 'keeper', 'heuristic']
