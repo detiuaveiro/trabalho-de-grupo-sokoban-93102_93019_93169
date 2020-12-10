@@ -18,6 +18,7 @@ class Node:
     
 
 class SokobanTree:
+    __slots__ = ['map_state', 'init_boxes', 'goal_boxes', 'Util', 'root', 'open_nodes','path_solution','used_states' ]
     def __init__ (self, map_state=None, init_boxes=None, goal_boxes=None):
         self.map_state = map_state
         self.init_boxes = init_boxes
@@ -83,26 +84,26 @@ class SokobanTree:
                     keeper_moves =  self.KeeperTree.search_keeper(keeper_target, node.keeper)
                     await asyncio.sleep(0) 
                     if keeper_moves is not None:
+                        
+                        newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                         h = hash(nboxes)
 
                         if not h in self.used_states:
-                            newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                             self.used_states[h] = {newnode.keeper}
                             heapq.heappush(self.open_nodes, (newnode.heuristic, self.count,newnode))
                             self.count +=1
                         else:
                             x = False
-                            newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                             for pos in self.used_states[h]:
                                 if self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
                                     x = True
                                     break
-
-                            if not any(self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None for pos in self.used_states[h]):
+                            if not x:
                                 heapq.heappush(self.open_nodes, (newnode.heuristic, self.count, newnode))
                                 self.count +=1
-                                
                             self.used_states[h].add(newnode.keeper)
+
+            #self.add_to_open(lnewnodes)
         return None
 
 class KeeperNode:

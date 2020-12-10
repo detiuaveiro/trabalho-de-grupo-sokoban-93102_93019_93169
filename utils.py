@@ -243,12 +243,13 @@ class Util:
         return False
 
     def freeze_deadlock(self, pos,  boxes_checked,tipo=None):
-
+        # horizontal = 1
+        # vertical = 0
         boxes_checked.add(pos)
 
         horizontal_block = True
         # Verificar se existe uma WALL a esqueda ou direita da caixa - bloqueio horizontal
-        if tipo == "horizontal" or tipo is None:
+        if tipo or tipo is None:
             left = (pos[0]-1, pos[1])
             right = (pos[0]+1, pos[1])
             horizontal_block = False
@@ -259,14 +260,14 @@ class Util:
                 horizontal_block = True
 
             # verificar se uma das caixas ao lado está blocked
-            if not horizontal_block and left in self.curr_boxes and left != self.box and self.freeze_deadlock(left,  boxes_checked, "vertical"):
+            if not horizontal_block and left in self.curr_boxes and left != self.box and self.freeze_deadlock(left,  boxes_checked, 0):
                 horizontal_block = True
-            if not horizontal_block and right in self.curr_boxes and right != self.box and self.freeze_deadlock(right, boxes_checked, "vertical"):
+            if not horizontal_block and right in self.curr_boxes and right != self.box and self.freeze_deadlock(right, boxes_checked, 0):
                 horizontal_block = True
 
         vertical_block = True
         # Verificar se existe uma WALL acima ou embaixo da caixa - bloqueio vertical
-        if tipo == "vertical" or tipo is None:
+        if not tipo or tipo is None:
             up = (pos[0], pos[1]-1)
             down = (pos[0], pos[1]+1)
             vertical_block = False
@@ -278,9 +279,9 @@ class Util:
                 vertical_block = True
 
             # verificar se uma das caixas ao lado está blocked
-            if not vertical_block and up in self.curr_boxes and up != self.box and self.freeze_deadlock(up, boxes_checked, "horizontal"):
+            if not vertical_block and up in self.curr_boxes and up != self.box and self.freeze_deadlock(up, boxes_checked, 1):
                 vertical_block = True
-            if not vertical_block and down in self.curr_boxes and down != self.box and self.freeze_deadlock(down, boxes_checked, "horizontal"):
+            if not vertical_block and down in self.curr_boxes and down != self.box and self.freeze_deadlock(down, boxes_checked, 1):
                 vertical_block = True
 
         if all(box in self.goals for box in boxes_checked):
