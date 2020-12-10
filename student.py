@@ -24,7 +24,7 @@ async def solver(puzzle, solution):
         keys = await SokobanTree.search()
 
         # your code
-        print(">>", keys)
+        # print(">>", keys)
 
         await solution.put(keys)
 
