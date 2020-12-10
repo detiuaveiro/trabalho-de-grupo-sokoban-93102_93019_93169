@@ -18,7 +18,7 @@ class Node:
     
 
 class SokobanTree:
-    __slots__ = ['map_state', 'init_boxes', 'goal_boxes', 'Util', 'root', 'open_nodes','path_solution','used_states' ]
+    __slots__ = ['map_state', 'init_boxes', 'goal_boxes', 'Util', 'root', 'open_nodes','path_solution','used_states', 'KeeperTree']
     def __init__ (self, map_state=None, init_boxes=None, goal_boxes=None):
         self.map_state = map_state
         self.init_boxes = init_boxes
