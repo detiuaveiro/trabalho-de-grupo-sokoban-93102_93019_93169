@@ -140,14 +140,12 @@ class KeeperTree:
             node = self.keeper_nodes.pop()
             
             if node.keeper_pos == target_pos:
-                end_time= time.time()
-                print(end_time-stime)
                 return node.move
 
             if len(node.move)!=0:
                 self.used_states_k.add((node.keeper_pos,node.move[-1]))
+            
             lnewnodes = []
-            count+=1
             
             for action, key in  self.Util.possible_keeper_actions(node.keeper_pos):
                 if not (action,key) in self.used_states_k:
