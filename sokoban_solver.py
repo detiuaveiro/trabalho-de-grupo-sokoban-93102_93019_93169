@@ -82,7 +82,6 @@ class SokobanTree:
                     keeper_target = (cbox[0]*2 - action[0], cbox[1]*2 - action[1])
                     keeper_moves =  self.KeeperTree.search_keeper(keeper_target, node.keeper)
                     await asyncio.sleep(0) 
-                    #print(" ACTION: {} ; BOX POSITION: {}; Keeper_Moves {}".format(action, curr_box_pos,keeper_moves))
                     if keeper_moves is not None:
 
                         newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
@@ -95,6 +94,7 @@ class SokobanTree:
                         else:
                             x = False
                             for pos in self.used_states[h]:
+                                await asyncio.sleep(0) 
                                 if self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
                                     x = True
                                     break

@@ -97,14 +97,13 @@ class Util:
         calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.distanceToGoal[tpl[1]][tpl[0][0]][tpl[0][1]], reverse=True)
         matchedBoxes=set()
         matchedGoals=set()
-        pQueue = Queue()
         heur=0
-        while calc_costs:
+        while calc_costs !=[]:
             b,goal = calc_costs.pop()
             if not b  in matchedBoxes and not goal  in matchedGoals:
                 h= self.distanceToGoal[goal][b[0]][b[1]]
                 if h!=1000:
-                    heur+=self.heuristic(b,goal)
+                    heur+=h
                     matchedBoxes.add(b)
                     matchedGoals.add(goal)
         for b in box:
@@ -135,6 +134,7 @@ class Util:
         return all(box in self.goals for box in curr_boxes)
 
     def possible_keeper_actions(self, keeper_pos):
+
         possible_moves = []
 
         x, y = keeper_pos
