@@ -81,9 +81,8 @@ class SokobanTree:
                     keeper_target = (cbox[0]*2 - action[0], cbox[1]*2 - action[1])
                     keeper_moves =  self.KeeperTree.search_keeper(keeper_target, node.keeper)
                     await asyncio.sleep(0) 
-                    #print(" ACTION: {} ; BOX POSITION: {}; Keeper_Moves {}".format(action, curr_box_pos,keeper_moves))
                     if keeper_moves is not None:
-
+                        
                         newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                         h = hash(nboxes)
 
@@ -127,6 +126,8 @@ class KeeperTree:
 
     
     def search_keeper(self, target_pos, keeper_pos, strat=1):
+        self.used_states_k=set()
+
         if strat:
             self.keeper_nodes= [KeeperNode(None, keeper_pos, "", self.Util.heuristic(keeper_pos, target_pos))]
         else:
@@ -136,14 +137,17 @@ class KeeperTree:
         while self.keeper_nodes:
 
             node = self.keeper_nodes.pop()
-
+            
             if node.keeper_pos == target_pos:
                 return node.move
 
+            if len(node.move)!=0:
+                self.used_states_k.add((node.keeper_pos,node.move[-1]))
+            
             lnewnodes = []
-
+            
             for action, key in  self.Util.possible_keeper_actions(node.keeper_pos):
-                if not self.get_path(node,action):
+                if not (action,key) in self.used_states_k:
                     if strat:
                         newnode = KeeperNode(node, action, f"{node.move}{key}", len(node.move)+ self.Util.heuristic(action, target_pos))
                         lnewnodes.append(newnode)    
@@ -152,7 +156,6 @@ class KeeperTree:
                         self.keeper_nodes.append(newnode)
             if strat:
                 self.add_to_open(lnewnodes)
-
         return None
 
     def add_to_open(self,lnewnodes):
