@@ -83,26 +83,26 @@ class SokobanTree:
                     keeper_moves =  self.KeeperTree.search_keeper(keeper_target, node.keeper)
                     await asyncio.sleep(0) 
                     if keeper_moves is not None:
-                        
-                        newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                         h = hash(nboxes)
 
                         if not h in self.used_states:
+                            newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                             self.used_states[h] = {newnode.keeper}
                             heapq.heappush(self.open_nodes, (newnode.heuristic, self.count,newnode))
                             self.count +=1
                         else:
                             x = False
+                            newnode = Node(nboxes, node, f"{node.move}{keeper_moves}{push}", cbox, self.Util.heuristic_boxes(nboxes))
                             for pos in self.used_states[h]:
                                 if self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None:
                                     x = True
                                     break
-                            if not x:
+
+                            if not any(self.KeeperTree.search_keeper(newnode.keeper, pos, 0) is not None for pos in self.used_states[h]):
                                 heapq.heappush(self.open_nodes, (newnode.heuristic, self.count, newnode))
                                 self.count +=1
+                                
                             self.used_states[h].add(newnode.keeper)
-
-            #self.add_to_open(lnewnodes)
         return None
 
 class KeeperNode:
