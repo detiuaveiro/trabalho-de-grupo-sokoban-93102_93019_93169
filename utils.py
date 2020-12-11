@@ -1,139 +1,138 @@
-from mapa import Map
 from consts import Tiles, TILES
 import math
-import asyncio
-import time
 from queue import Queue
-
-
-#https://www.youtube.com/watch?v=cQ5MsiGaDY8
-
 class Util:
     def __init__ (self, map_state=None, init_boxes=None):
-        self.map_state = map_state
-        self.curr_boxes = init_boxes
-        self.deadends={}
-        self.goals = set(self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])) if map_state is not None else None
-        self.dark_list, self.distanceToGoal = self.init_darklist() if self.goals is not None else (None,None) #init
-        #self.box_assignment= self.hungarian_heuristic()
-        self.box = None
-
-    # def hungarian_heuristic(self):
-    #     gls=self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])
-    #     matrix= [[self.distanceToGoal[g][b[0]][b[1]] for g in self.goals] for b in self.curr_boxes]
-    #     print(matrix)
-
-    #     #Step 1 Subtract row mins from each row.
-    #     matrix=[[matrix[x][y] - min(matrix[x])for y in range(len(matrix)) ] for x in range(len(matrix)) ]
-    #     print(matrix)
-
-    #     #Step 2 Subtract column mins from each column
-    #     matrix=[[matrix[x][y] - min([matrix[c][y] for c in range(len(matrix))]) for y in range(len(matrix))] for x in range(len(matrix)) ]
-    #     return [gls[i] for i in range(len(gls)-1,-1,-1) ]
-
+        self.map_state = map_state # Estado inicial do mapa
+        self.curr_boxes = init_boxes # Coordenadas atuais das caixas
+        self.deadends={} # Dicionário de deadends (usado na função 'possible moves')
+        self.goals = set(self.filter_tiles([Tiles.BOX_ON_GOAL, Tiles.GOAL, Tiles.MAN_ON_GOAL])) if map_state is not None else None # Posições dos goals 
+        self.dark_list, self.distanceToGoal = self.init_darklist() if self.goals is not None else (None,None) # Chama a função 'init_darklist'
+        self.box = None # Usada para manter track da caixa em análise quando funcções são chamdas recursivamente
 
     def init_darklist(self):
+        """
+            A dark list é um array de arrays em que as poições que podem ser visitadas têm o valor de 1 e as que não podem ser têm o valor 0
+            Esta função é chamada no init do Util, quando a SokobanTree é criada ou quando é feito um novo nível (update da tree).
+            A distanceToGoal é um dicionário cuja chaves são posições dos goals e para cada chave temos uma matriz com os movimentos necessários de cada coordenada para esse goal. Peermite-nos calcular a heurística.
+        """
+
+        # Calcula o tamanho do nível
         horz_tiles, vert_tiles = len(self.map_state[0]), len(self.map_state)
 
+        # inicializa o visited e distanceToGoal
         visited = [[0] * vert_tiles for _ in range(horz_tiles)]
         distanceToGoal={goal:[[1000] * vert_tiles for _ in range(horz_tiles)] for goal in self.goals}
 
         def check_not_blocked(pos):
+            """
+                Função definida em Dynamic Programming para facilitar o calculo dos valores da dark list.
+            """
             x, y = pos
 
             if visited[x][y] or self.get_tile(pos) == Tiles.WALL:
                 return
 
             visited[x][y] = 1
-            if x > -1 and x < horz_tiles and y + 2 > -1 and y + 2 < vert_tiles and not (self.get_tile((x, y + 2)) == Tiles.WALL):
-                check_not_blocked((x, y + 1))
-            if x + 2 > -1 and x + 2 < horz_tiles and y > -1 and y < vert_tiles and not (self.get_tile((x + 2, y)) == Tiles.WALL):
-                check_not_blocked((x + 1, y))
-            if x > -1 and x < horz_tiles and y - 2 > -1 and y - 2< vert_tiles and not (self.get_tile((x, y - 2)) == Tiles.WALL):
-                check_not_blocked((x, y - 1))
+
+            # Verificar que a caixa pode ser empurrada ou não para as seguintes 4 coordenadas:
+            #left
             if x - 2 > -1 and x - 2< horz_tiles and y > -1 and y < vert_tiles and not (self.get_tile((x - 2, y)) == Tiles.WALL):
                 check_not_blocked((x - 1, y))
+            # right
+            if x + 2 > -1 and x + 2 < horz_tiles and y > -1 and y < vert_tiles and not (self.get_tile((x + 2, y)) == Tiles.WALL):
+                check_not_blocked((x + 1, y))
+            # down
+            if x > -1 and x < horz_tiles and y + 2 > -1 and y + 2 < vert_tiles and not (self.get_tile((x, y + 2)) == Tiles.WALL):
+                check_not_blocked((x, y + 1))
+            #up
+            if x > -1 and x < horz_tiles and y - 2 > -1 and y - 2< vert_tiles and not (self.get_tile((x, y - 2)) == Tiles.WALL):
+                check_not_blocked((x, y - 1))
             return
 
         def distanceG(goal):
             """
                 Caixa mais distante -> heuristica maior
+                Calcula o número de movimentos necessários para chegar a um goal
             """
             distanceToGoal[goal][goal[0]][goal[1]]=0
             open_goals = Queue()
             open_goals.put(goal)
             while not open_goals.empty():
                 x,y= open_goals.get()
-
-                if distanceToGoal[goal][x][y+1] == 1000 and not (self.get_tile((x, y +1)) == Tiles.WALL) and not (self.get_tile((x, y +2)) == Tiles.WALL):
-                    distanceToGoal[goal][x][y+1]=distanceToGoal[goal][x][y]+1
-                    open_goals.put((x,y+1))
-
-                if distanceToGoal[goal][x][y-1] == 1000 and not (self.get_tile((x, y - 1)) == Tiles.WALL) and not (self.get_tile((x, y -2)) == Tiles.WALL):
-                    distanceToGoal[goal][x][y-1]=distanceToGoal[goal][x][y]+1
-                    open_goals.put((x,y-1))
-
-                if distanceToGoal[goal][x+1][y] == 1000 and not (self.get_tile((x + 1, y )) == Tiles.WALL) and not (self.get_tile((x + 2, y)) == Tiles.WALL):
-                    distanceToGoal[goal][x+1][y]=distanceToGoal[goal][x][y]+1
-                    open_goals.put((x + 1,y))
-
+                
+                # left
                 if distanceToGoal[goal][x-1][y] == 1000 and not (self.get_tile((x - 1, y )) == Tiles.WALL) and not (self.get_tile((x - 2, y)) == Tiles.WALL):
-                    distanceToGoal[goal][x-1][y]=distanceToGoal[goal][x][y]+1
+                    distanceToGoal[goal][x-1][y] = distanceToGoal[goal][x][y] + 1
                     open_goals.put((x - 1,y))
-
+                # right
+                if distanceToGoal[goal][x+1][y] == 1000 and not (self.get_tile((x + 1, y )) == Tiles.WALL) and not (self.get_tile((x + 2, y)) == Tiles.WALL):
+                    distanceToGoal[goal][x+1][y] = distanceToGoal[goal][x][y] + 1
+                    open_goals.put((x + 1,y))
+                # down
+                if distanceToGoal[goal][x][y+1] == 1000 and not (self.get_tile((x, y + 1)) == Tiles.WALL) and not (self.get_tile((x, y +2)) == Tiles.WALL):
+                    distanceToGoal[goal][x][y+1] = distanceToGoal[goal][x][y] + 1
+                    open_goals.put((x,y+1))
+                # up
+                if distanceToGoal[goal][x][y-1] == 1000 and not (self.get_tile((x, y - 1)) == Tiles.WALL) and not (self.get_tile((x, y -2)) == Tiles.WALL):
+                    distanceToGoal[goal][x][y-1] = distanceToGoal[goal][x][y] + 1
+                    open_goals.put((x,y-1))
+                
+                
+        # Chamar as funções para todos os goals
         [check_not_blocked((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
         [distanceG((x,y)) for x in range(horz_tiles) for y in range(vert_tiles) if (x,y) in self.goals]
 
         return visited, distanceToGoal
 
-    # def heuristic_boxes(self,box):
-    #     #print(box)
-    #     #print(self.box_assignment)
-    #     #print(sum([self.distanceToGoal[self.box_assignment[x]][box[x][0]][box[x][1]] for x in range(len(self.box_assignment))] ))
-    #     return sum([self.distanceToGoal[self.box_assignment[x]][box[x][0]][box[x][1]] for x in range(len(self.box_assignment))] )
-
     def heuristic_boxes(self, box):
+        """
+            Calculo da heurística para um determinado estado das caixas
+        """
+        # Calcula todas as combinções caixa-goal e ordena pela heurística
         calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.distanceToGoal[tpl[1]][tpl[0][0]][tpl[0][1]], reverse=True)
+
+        # Inicializaos sets que vão ter as posições já atribuídas
         matchedBoxes=set()
         matchedGoals=set()
+
         heur=0
         while calc_costs !=[]:
             b,goal = calc_costs.pop()
-            if not b  in matchedBoxes and not goal  in matchedGoals:
+            # Se a box e o goal ainda não foram atribuídos
+            if not b in matchedBoxes and not goal  in matchedGoals:
+                # Calcula a heurística
                 h= self.distanceToGoal[goal][b[0]][b[1]]
+                # Se a distância não for infinita (ou seja, é possível deslocar a caixa)
                 if h!=1000:
-                    heur+=h
+                    heur+=h 
                     matchedBoxes.add(b)
                     matchedGoals.add(goal)
+                
+        # Para cada caixa não atribuída somar a distância mínima
         for b in box:
             if not b in matchedBoxes:
                 heur+=min([self.distanceToGoal[goal][b[0]][b[1]] for goal in self.goals])
                 matchedBoxes.add(b)
         return heur
 
-    # def heuristic_boxes(self, box):
-    #     calc_costs = sorted([(b, goal) for goal in self.goals  for b in box],key=lambda tpl : self.heuristic(tpl[0],tpl[1]))
-    #     matchedBoxes=set()
-    #     matchedGoals=set()
-    #     heur=0
-    #     for b, goal in calc_costs:
-    #         if not b in matchedBoxes and not goal in matchedGoals:
-    #             heur+=self.heuristic(b,goal)
-    #             matchedBoxes.add(b)
-    #             matchedGoals.add(goal)
-    #     return heur
-
     def heuristic(self, pos1, pos2):
+        """
+            Cálculo da distância de Manhattan - usado na heuristica do keeper
+        """
         return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
 
     def completed(self, curr_boxes):
         """
-            Given the goal boxes and the current boxes, checks if they match
+            Dado os goals e as caixas verifica se as caixas estão todas nos goals.
+            (Copiado do código fonte)
         """
         return all(box in self.goals for box in curr_boxes)
 
     def possible_keeper_actions(self, keeper_pos):
-
+        """
+            Calcula as ações possíveis do keeper dada a sua posição
+        """
         possible_moves = []
 
         x, y = keeper_pos
@@ -162,8 +161,7 @@ class Util:
 
     def possible_actions(self, curr_boxes):
         """
-            Possible actions vai ser a lista de ações possiveis de todas as caixas
-            Devolve uma lista de ações possiveis
+            Retorna a lista de ações possiveis de todas as caixas usando a função 'possible_moves'
         """
         self.curr_boxes = curr_boxes
         possible_actions = []
@@ -176,6 +174,9 @@ class Util:
         return possible_actions
 
     def possible_moves(self, box,i):
+        """
+            Para uma dada caixa calcula os seus possíveis movimentos.
+        """
         self.box = box
         possible_moves = set()
 
@@ -186,14 +187,18 @@ class Util:
         down = (x, y + 1)
 
         # Left
+        # Não é simple deadlock ou parede AND não é uma caixa AND não está bloqueado na posição oposta à que queremos verificar (para o keeper poder empurrar a caixa)
         if self.dark_list[x-1][y] and not left in self.curr_boxes and not self.is_blocked(right):
             li= self.curr_boxes[:i] + (left,) + self.curr_boxes[i+1:]
             l=hash(li)
+            # Se a posição ainda não tiver sido marcada como deadend (inválida)
             if not l in self.deadends :
-                if not self.freeze_deadlock(left,set()):
-                    possible_moves.add((li,left))
+                # Vê não é freeze_deadlock
+                if not self.freeze_deadlock(left, set()):
+                    possible_moves.add((li, left))
+                # Se for adicionamos ao deadend
                 else:
-                    self.deadends[l]=1
+                    self.deadends[l] = 1
 
         # Right
         if self.dark_list[x+1][y] and not right in self.curr_boxes and not self.is_blocked(left):
@@ -226,11 +231,6 @@ class Util:
                     self.deadends[d]=1
 
         return possible_moves
-
-    # def is_dead_end(self, pos):
-    #     if self.is_blocked(pos) or self.is_trapped(pos):
-    #         return True
-    #     return False
         
     def is_blocked(self, pos):
         """
@@ -243,58 +243,79 @@ class Util:
         return False
 
     def freeze_deadlock(self, pos,  boxes_checked,tipo=None):
-        # horizontal = 1
-        # vertical = 0
+        """
+            Verifica para uma dada posição se é freeze deadlock
+            (de notar que a posição que é recebida já é o futuro move da caixa)
+             
+            É freeze deadlock quando:
+            STEP 1 - Tem parede do lado direito e esquerdo da caixa - caixa bloqueada no eixo do x.
+            STEP 2 - Tem um simple deadlock do lado direito e esquerdo da caixa  - caixa bloqueada no eixo do x.
+            STEP 3 - Tem uma caixa do lado direito e esquerdo (uma destas caixas tem de estar bloqueada) - caixa bloqueada no eixo do x.
+            ^ Processo igual para o eixo vertical
+        """
+
+        # tipo horizontal = 1
+        # tipo vertical = 0
+
+        # Para manter track das posições já vistas quando a função é chamada recursivamente (ajuda a evitar cirular checks - andar sempre a ver as mesmas posições)
         boxes_checked.add(pos)
 
         horizontal_block = True
-        # Verificar se existe uma WALL a esqueda ou direita da caixa - bloqueio horizontal
+        # if tipo é horizontal ou se não foi definido nenhum tipo
         if tipo or tipo is None:
             left = (pos[0]-1, pos[1])
             right = (pos[0]+1, pos[1])
             horizontal_block = False
+
+            # STEP 1
             if self.get_tile(left) == Tiles.WALL or self.get_tile(right) == Tiles.WALL:
                 horizontal_block = True
-
+            # STEP 2
             if not horizontal_block and not self.dark_list[pos[0]-1][pos[1]] and not self.dark_list[pos[0]+1][pos[1]]:
                 horizontal_block = True
-
-            # verificar se uma das caixas ao lado está blocked
+            # STEP 3
             if not horizontal_block and left in self.curr_boxes and left != self.box and self.freeze_deadlock(left,  boxes_checked, 0):
                 horizontal_block = True
             if not horizontal_block and right in self.curr_boxes and right != self.box and self.freeze_deadlock(right, boxes_checked, 0):
                 horizontal_block = True
 
         vertical_block = True
-        # Verificar se existe uma WALL acima ou embaixo da caixa - bloqueio vertical
+        # if tipo é vertical (not horizontal) ou se não foi definido nenhum tipo
         if not tipo or tipo is None:
             up = (pos[0], pos[1]-1)
             down = (pos[0], pos[1]+1)
             vertical_block = False
+
+            # STEP 1
             if self.get_tile(up) == Tiles.WALL or self.get_tile(down) == Tiles.WALL:
                 vertical_block = True
-            
-            # Verificar se esta na darklist
+            # STEP 2
             if not vertical_block and not self.dark_list[pos[0]][pos[1]-1] and not self.dark_list[pos[0]][pos[1]+1]:
                 vertical_block = True
-
-            # verificar se uma das caixas ao lado está blocked
+            # STEP 3
             if not vertical_block and up in self.curr_boxes and up != self.box and self.freeze_deadlock(up, boxes_checked, 1):
                 vertical_block = True
             if not vertical_block and down in self.curr_boxes and down != self.box and self.freeze_deadlock(down, boxes_checked, 1):
                 vertical_block = True
 
+        # Verifica se todas as caixas (pelas quais ele passou) estão em goal
         if all(box in self.goals for box in boxes_checked):
             return False
         return vertical_block and horizontal_block
 
     def get_tile(self, pos):      
-        """Retrieve tile at position pos."""
+        """
+            Retorna o tile na posição
+            (copiado do código fonte)
+        """
         x, y = pos
         return self.map_state[y][x]
     
     def filter_tiles (self, list_to_filter):
-        """Util to retrieve list of coordinates of given tiles."""
+        """
+            Retorna a lista de coordenadas dada uma lista de tiles
+            (copiado do código fonte)
+        """
         return [
             (x, y)
             for y, l in enumerate(self.map_state)
