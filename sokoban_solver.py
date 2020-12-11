@@ -1,3 +1,5 @@
+# AUTHORS: Francisca Barros (93102), Jose Sousa (93019) e Margarida Martins (93169)
+
 from utils import *
 import asyncio
 import time

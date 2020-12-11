@@ -1,3 +1,5 @@
+# AUTHORS: Francisca Barros (93102), Jose Sousa (93019) e Margarida Martins (93169)
+
 from consts import Tiles, TILES
 import math
 from queue import Queue
